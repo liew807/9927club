@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>游戏ID登录测试</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
+        body { background: #1a1a2e; color: white; padding: 20px; }
+        .container { max-width: 500px; margin: 50px auto; }
+        h1 { color: #4cc9f0; margin-bottom: 30px; text-align: center; }
+        .card { background: #16213e; padding: 25px; border-radius: 10px; }
+        .input-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; color: #a5b4cb; }
+        input { width: 100%; padding: 12px; background: #0f3460; border: 1px solid #2d4059; border-radius: 5px; color: white; }
+        button { width: 100%; padding: 14px; background: #4361ee; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; }
+        button:hover { background: #3a56d4; }
+        button:disabled { background: #2d4059; cursor: not-allowed; }
+        .result { margin-top: 20px; padding: 15px; border-radius: 5px; display: none; }
+        .success { background: rgba(76, 201, 240, 0.1); border-left: 4px solid #4cc9f0; display: block; }
+        .error { background: rgba(240, 84, 84, 0.1); border-left: 4px solid #f05454; display: block; }
+        .debug { font-family: monospace; font-size: 12px; background: #000; padding: 10px; border-radius: 5px; margin-top: 20px; display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 游戏ID登录测试</h1>
+        
+        <div class="card">
+            <div class="input-group">
+                <label>后端地址</label>
+                <input type="text" id="backendUrl" placeholder="https://your-backend.onrender.com" value="">
+                <small style="color: #a5b4cb; display: block; margin-top: 5px;">输入你的Render后端地址</small>
+            </div>
+            
+            <div class="input-group">
+                <label>邮箱</label>
+                <input type="email" id="email" placeholder="liewhy1699@gmail.com" value="liewhy1699@gmail.com">
+            </div>
+            
+            <div class="input-group">
+                <label>密码</label>
+                <input type="password" id="password" placeholder="请输入密码">
+            </div>
+            
+            <button id="loginBtn" onclick="testLogin()">测试登录</button>
+            <button id="healthBtn" onclick="checkHealth()" style="margin-top: 10px; background: #7209b7;">检查后端状态</button>
+            
+            <div id="result" class="result"></div>
+            
+            <div id="debug" class="debug"></div>
+        </div>
+        
+        <div style="margin-top: 30px; color: #a5b4cb; font-size: 14px; text-align: center;">
+            <p>🔧 调试步骤：</p>
+            <p>1. 输入后端地址 → 2. 点击"检查后端状态" → 3. 输入邮箱密码 → 4. 点击"测试登录"</p>
+            <p>按F12打开开发者工具查看网络请求</p>
+        </div>
+    </div>
+
+    <script>
+        // 调试函数：显示详细信息
+        function showDebug(msg) {
+            const debugDiv = document.getElementById('debug');
+            debugDiv.innerHTML += `<div>${new Date().toLocaleTimeString()}: ${msg}</div>`;
+            debugDiv.style.display = 'block';
+        }
+        
+        // 显示结果
+        function showResult(type, message) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = `result ${type}`;
+            resultDiv.innerHTML = `<strong>${type === 'success' ? '✅' : '❌'} ${type === 'success' ? '成功' : '错误'}:</strong> ${message}`;
+        }
+        
+        // 检查后端健康状态
+        async function checkHealth() {
+            const backendUrl = document.getElementById('backendUrl').value.trim();
+            if (!backendUrl) {
+                showResult('error', '请输入后端地址');
+                return;
+            }
+            
+            showDebug(`检查后端健康: ${backendUrl}/api/health`);
+            
+            try {
+                const response = await fetch(`${backendUrl}/api/health`, {
+                    method: 'GET',
+                    headers: { 'Accept': 'application/json' }
+                });
+                
+                const data = await response.json();
+                showDebug(`响应状态: ${response.status}`);
+                showDebug(`响应数据: ${JSON.stringify(data, null, 2)}`);
+                
+                if (response.ok) {
+                    showResult('success', `后端运行正常！服务: ${data.service || '未知'}`);
+                } else {
+                    showResult('error', `后端异常: ${response.status} ${data.message || ''}`);
+                }
+            } catch (error) {
+                showDebug(`请求失败: ${error.message}`);
+                showResult('error', `无法连接到后端: ${error.message}`);
+            }
+        }
+        
+        // 测试登录
+        async function testLogin() {
+            const backendUrl = document.getElementById('backendUrl').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            
+            if (!backendUrl || !email || !password) {
+                showResult('error', '请填写所有字段');
+                return;
+            }
+            
+            const loginBtn = document.getElementById('loginBtn');
+            loginBtn.disabled = true;
+            loginBtn.textContent = '登录中...';
+            
+            showDebug(`开始登录: ${email} → ${backendUrl}/api/login`);
+            
+            try {
+                const response = await fetch(`${backendUrl}/api/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                showDebug(`登录响应状态: ${response.status}`);
+                
+                const data = await response.json();
+                showDebug(`登录响应数据: ${JSON.stringify(data, null, 2)}`);
+                
+                if (response.ok && data.success) {
+                    showResult('success', `登录成功！用户: ${data.user.email}<br>Token: ${data.token.idToken.substring(0, 30)}...`);
+                    
+                    // 保存Token供后续使用
+                    localStorage.setItem('token', data.token.idToken);
+                    localStorage.setItem('userEmail', data.user.email);
+                    
+                    // 测试修改ID功能
+                    setTimeout(() => testChangeId(backendUrl, data.token.idToken), 1000);
+                } else {
+                    showResult('error', `登录失败: ${data.message || data.error || '未知错误'}`);
+                }
+            } catch (error) {
+                showDebug(`登录请求异常: ${error.message}`);
+                showResult('error', `请求失败: ${error.message}<br>请检查：1. 后端地址正确 2. CORS配置 3. 网络连接`);
+            } finally {
+                loginBtn.disabled = false;
+                loginBtn.textContent = '测试登录';
+            }
+        }
+        
+        // 测试修改ID功能
+        async function testChangeId(backendUrl, token) {
+            showDebug(`测试修改ID功能...`);
+            
+            try {
+                const response = await fetch(`${backendUrl}/api/change-id`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        newLocalId: 'TEST' + Math.floor(Math.random() * 1000),
+                        idToken: token
+                    })
+                });
+                
+                const data = await response.json();
+                showDebug(`修改ID响应: ${JSON.stringify(data, null, 2)}`);
+                
+                if (data.success) {
+                    showResult('success', `✅ 完整流程测试通过！<br>登录成功 → 修改ID成功<br>新ID: ${data.gameResponse?.newLocalId || '未知'}`);
+                } else {
+                    showResult('error', `登录成功但修改ID失败: ${data.message}`);
+                }
+            } catch (error) {
+                showDebug(`修改ID失败: ${error.message}`);
+                showResult('error', `登录成功，但修改ID失败: ${error.message}`);
+            }
+        }
+        
+        // 页面加载时检查是否有保存的后端地址
+        window.onload = function() {
+            const savedUrl = localStorage.getItem('backendUrl');
+            if (savedUrl) {
+                document.getElementById('backendUrl').value = savedUrl;
+            }
+        };
+    </script>
+</body>
+</html>
