@@ -1,0 +1,27 @@
+{
+  "users": [
+    {
+      "username": "admin",
+      "password": "admin123",
+      "isAdmin": true
+    }
+  ],
+  "products": [],
+  "orders": [],
+  "services": [
+    {
+      "id": 1,
+      "type": "whatsapp",
+      "name": "官方客服",
+      "link": "https://wa.me/60123456789",
+      "enabled": true,
+      "createdAt": "2024-01-01T00:00:00.000Z"
+    }
+  ],
+  "settings": {
+    "storeName": "CPMCY商城",
+    "kuaishouLink": "https://v.kuaishou.com/JGv00n48",
+    "enableService": true
+  },
+  "lastUpdated": "2024-01-01T00:00:00.000Z"
+}
