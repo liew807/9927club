@@ -1,0 +1,40 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "username": "admin",
+      "password": "admin123",
+      "isAdmin": true,
+      "createdAt": "2024-01-15T12:00:00.000Z"
+    }
+  ],
+  "products": [],
+  "orders": [],
+  "services": [
+    {
+      "id": 1,
+      "type": "whatsapp",
+      "name": "官方客服",
+      "link": "https://wa.me/60123456789",
+      "enabled": true,
+      "createdAt": "2024-01-15T12:00:00.000Z"
+    },
+    {
+      "id": 2,
+      "type": "wechat",
+      "name": "微信客服",
+      "link": "https://weixin.qq.com/",
+      "enabled": true,
+      "createdAt": "2024-01-15T12:00:00.000Z"
+    }
+  ],
+  "settings": {
+    "storeName": "9927俱乐部",
+    "kuaishouLink": "https://v.kuaishou.com/JGv00n48",
+    "contactInfo": "FB账号GH Tree",
+    "welcomeMessage": "欢迎选购！点击购买扫码完成付款",
+    "enableService": true,
+    "updatedAt": "2024-01-15T12:00:00.000Z"
+  },
+  "lastUpdated": "2024-01-15T12:00:00.000Z"
+}
