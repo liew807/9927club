@@ -1,0 +1,71 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "username": "admin",
+      "password": "admin123",
+      "isAdmin": true,
+      "is_admin": true,
+      "createdAt": "2024-01-15T12:00:00.000Z"
+    }
+  ],
+  "products": [
+    {
+      "id": 1,
+      "name": "测试商品1",
+      "price": 100.00,
+      "description": "这是一个测试商品",
+      "image": "https://via.placeholder.com/300x250.png?text=商品1",
+      "createdAt": "2024-01-15T12:00:00.000Z"
+    },
+    {
+      "id": 2,
+      "name": "测试商品2",
+      "price": 200.00,
+      "description": "另一个测试商品",
+      "image": "https://via.placeholder.com/300x250.png?text=商品2",
+      "createdAt": "2024-01-15T12:00:00.000Z"
+    }
+  ],
+  "orders": [
+    {
+      "id": 1,
+      "orderNumber": "DD2410150001",
+      "userId": "testuser",
+      "productId": 1,
+      "productName": "测试商品1",
+      "productPrice": 100.00,
+      "totalAmount": 100.00,
+      "paymentMethod": "tng",
+      "status": "pending",
+      "createdAt": "2024-01-15T12:00:00.000Z"
+    }
+  ],
+  "services": [
+    {
+      "id": 1,
+      "type": "whatsapp",
+      "name": "官方客服",
+      "link": "https://wa.me/60123456789",
+      "enabled": true,
+      "createdAt": "2024-01-15T12:00:00.000Z"
+    },
+    {
+      "id": 2,
+      "type": "wechat",
+      "name": "微信客服",
+      "link": "https://weixin.qq.com/",
+      "enabled": true,
+      "createdAt": "2024-01-15T12:00:00.000Z"
+    }
+  ],
+  "settings": {
+    "storeName": "CPMCY商城",
+    "kuaishouLink": "https://v.kuaishou.com/JGv00n48",
+    "contactInfo": "FB账号GH Tree",
+    "welcomeMessage": "欢迎选购！点击购买扫码完成付款",
+    "enableService": true,
+    "updatedAt": "2024-01-15T12:00:00.000Z"
+  },
+  "lastUpdated": "2024-01-15T12:00:00.000Z"
+}
