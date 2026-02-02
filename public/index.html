@@ -1,0 +1,2824 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YP俱乐部</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Microsoft YaHei', sans-serif; background: #ffffff; color: #333333; }
+        .page { display: none; min-height: 100vh; }
+        .page.active { display: block; }
+        
+        /* 蓝勾认证标签样式 - Twitter/X风格 */
+        .verified-badge {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            background: #1DA1F2;
+            border-radius: 50%;
+            position: relative;
+            margin-left: 8px;
+            vertical-align: middle;
+            box-shadow: 0 2px 4px rgba(29, 161, 242, 0.3);
+        }
+
+        .verified-badge::after {
+            content: "✓";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+            font-family: Arial, sans-serif;
+        }
+
+        .login-title .verified-badge {
+            width: 24px;
+            height: 24px;
+            margin-left: 10px;
+            vertical-align: baseline;
+        }
+
+        .login-title .verified-badge::after {
+            font-size: 14px;
+        }
+
+        /* 登录页面标题容器 */
+        .title-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+        
+        .login-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        /* 商品详情页样式 */
+        .product-detail-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .detail-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 20px;
+        }
+        
+        .back-btn {
+            background: none;
+            border: 1px solid #ddd;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 14px;
+        }
+        
+        .back-btn:hover {
+            background: #f5f5f5;
+        }
+        
+        .product-detail-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-top: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .product-detail-content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .title-container {
+                flex-direction: column;
+                gap: 8px;
+            }
+            
+            .login-title .verified-badge {
+                width: 20px;
+                height: 20px;
+                margin-left: 5px;
+            }
+        }
+        
+        .product-image-section {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .main-product-image {
+            width: 100%;
+            height: 400px;
+            overflow: hidden;
+            border-radius: 10px;
+            background: #f8f8f8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #eee;
+        }
+        
+        .main-product-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            padding: 20px;
+            transition: transform 0.3s ease;
+        }
+        
+        .product-info-section {
+            padding: 20px 0;
+        }
+        
+        .product-detail-name {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            line-height: 1.3;
+            color: #000;
+        }
+        
+        .product-detail-price {
+            font-size: 32px;
+            color: #ff4444;
+            font-weight: bold;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .product-description {
+            margin: 30px 0;
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #eee;
+        }
+        
+        .description-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #000;
+            color: #333;
+        }
+        
+        .description-content {
+            font-size: 16px;
+            color: #555;
+            line-height: 1.8;
+            white-space: pre-line;
+        }
+        
+        .purchase-section {
+            margin-top: 30px;
+            padding: 25px;
+            background: #f9f9f9;
+            border-radius: 10px;
+            border: 1px solid #eee;
+        }
+        
+        .purchase-btn {
+            width: 100%;
+            padding: 16px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .detail-footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            text-align: center;
+            color: #999;
+            font-size: 14px;
+        }
+        
+        /* 游戏信息表单样式 */
+        .game-info-form {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .game-info-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .game-info-title i {
+            color: #007bff;
+        }
+        
+        .game-info-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .game-info-group {
+            margin-bottom: 15px;
+        }
+        
+        .game-info-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: #555;
+            font-weight: 500;
+        }
+        
+        .game-info-group .form-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .game-info-group .form-input:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+        }
+        
+        .required-field::after {
+            content: " *";
+            color: #ff4444;
+        }
+        
+        /* 游戏信息展示样式 - 用于订单管理 */
+        .game-info-card {
+            background: #f8f9fa;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 15px 0;
+            border-left: 4px solid #007bff;
+        }
+        
+        .game-info-header {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .game-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+        
+        .game-info-item {
+            margin-bottom: 8px;
+        }
+        
+        .game-info-label {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 3px;
+        }
+        
+        .game-info-value {
+            font-size: 14px;
+            color: #333;
+            font-weight: 500;
+            word-break: break-word;
+        }
+        
+        .game-info-value:empty::before {
+            content: "未填写";
+            color: #999;
+            font-style: italic;
+        }
+        
+        /* 备注信息样式 */
+        .remark-info {
+            background: #fff3cd;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 15px 0;
+            border-left: 4px solid #ffc107;
+        }
+        
+        .remark-label {
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #856404;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .remark-content {
+            font-size: 14px;
+            color: #856404;
+            line-height: 1.5;
+            white-space: pre-wrap;
+        }
+        
+        .remark-content:empty::before {
+            content: "无备注";
+            color: #999;
+            font-style: italic;
+        }
+        
+        /* 商品卡片样式更新 - 添加查看详情按钮 */
+        .product-card .product-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: auto;
+        }
+        
+        .product-card .view-detail-btn {
+            background: #666;
+            color: white;
+            flex: 1;
+        }
+        
+        .product-card .view-detail-btn:hover {
+            background: #555;
+        }
+        
+        .product-card .buy-btn {
+            background: #000;
+            color: white;
+            flex: 1;
+        }
+        
+        /* 原有样式 */
+        .login-container { width: 100%; max-width: 400px; margin: 100px auto; padding: 40px; background: #ffffff; border: 1px solid #e0e0e0; border-radius: 8px; }
+        .login-title { text-align: center; font-size: 24px; margin-bottom: 0; font-weight: normal; }
+        .login-tabs { display: flex; margin-bottom: 30px; }
+        .login-tab { flex: 1; padding: 12px; background: #f5f5f5; border: none; border-bottom: 2px solid #f5f5f5; font-size: 16px; color: #666; cursor: pointer; }
+        .login-tab.active { background: #ffffff; border-bottom: 2px solid #000000; color: #000000; }
+        .login-form { display: none; }
+        .login-form.active { display: block; }
+        .form-group { margin-bottom: 20px; }
+        .form-input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 16px; }
+        .form-input:focus { outline: none; border-color: #000000; }
+        
+        .btn { padding: 12px 24px; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; text-align: center; display: inline-block; transition: opacity 0.2s; }
+        .btn:hover { opacity: 0.9; }
+        .btn:active { opacity: 0.8; }
+        .btn-black { background: #000000; color: #ffffff; }
+        .btn-gray { background: #f0f0f0; color: #333; }
+        .btn-red { background: #ff4444; color: white; }
+        .btn-green { background: #00c853; color: white; }
+        .btn-block { width: 100%; }
+        
+        .store-header { padding: 20px; border-bottom: 1px solid #e0e0e0; display: flex; justify-content: space-between; align-items: center; }
+        .store-title { font-size: 20px; font-weight: normal; }
+        .user-info { display: flex; align-items: center; gap: 15px; }
+        
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            padding: 15px;
+            width: 100%;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .product-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            background: white;
+        }
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .product-img-container {
+            width: 100%;
+            height: 180px;
+            overflow: hidden;
+            position: relative;
+            background: #f8f8f8;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+        }
+        .product-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            padding: 10px;
+            transition: transform 0.3s ease;
+        }
+        .product-card:hover .product-img {
+            transform: scale(1.05);
+        }
+        .product-info {
+            padding: 15px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .product-name {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            line-height: 1.4;
+            height: 44px;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            cursor: pointer;
+            color: #333;
+        }
+        .product-name:hover {
+            color: #000;
+        }
+        .product-price {
+            font-size: 18px;
+            color: #ff4444;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        /* 支付方式样式更新 */
+        .payment-methods { display: flex; gap: 10px; margin-bottom: 15px; }
+        .payment-option { 
+            flex: 1; 
+            border: 1px solid #ddd; 
+            border-radius: 8px; 
+            padding: 15px; 
+            cursor: pointer; 
+            text-align: center;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .payment-option:hover { 
+            border-color: #000; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transform: translateY(-3px);
+        }
+        .payment-option.active { 
+            border: 2px solid #000; 
+            background: #f9f9f9; 
+        }
+        .payment-icon { 
+            width: 80px; 
+            height: 80px; 
+            margin: 0 auto 10px; 
+            background: #f5f5f5; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            border-radius: 50%; 
+            overflow: hidden;
+            padding: 10px;
+            border: 2px solid #eee;
+        }
+        .payment-icon img { 
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+        .payment-name { 
+            font-size: 16px; 
+            color: #000; 
+            margin-top: 5px; 
+            font-weight: bold; 
+        }
+        
+        /* 支付状态页面样式 */
+        .payment-status-page {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 40px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .payment-status-icon {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 20px;
+            background: #d4edda;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            color: #155724;
+        }
+        
+        .payment-status-icon.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .payment-status-icon.pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .payment-status-icon.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .payment-details {
+            background: #f9f9f9;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        
+        .payment-detail-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .payment-detail-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        
+        .payment-detail-label {
+            color: #666;
+            font-weight: normal;
+        }
+        
+        .payment-detail-value {
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .payment-action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .payment-action-buttons .btn {
+            flex: 1;
+        }
+        
+        .admin-nav { padding: 20px; border-bottom: 1px solid #e0e0e0; display: flex; gap: 10px; }
+        .nav-btn { padding: 10px 20px; background: #f5f5f5; border: none; border-radius: 4px; cursor: pointer; }
+        .nav-btn.active { background: #000; color: white; }
+        .admin-content { padding: 20px; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
+        .order-card { 
+            border: 1px solid #e0e0e0; 
+            border-radius: 8px; 
+            padding: 20px; 
+            margin-bottom: 20px;
+            background: white;
+        }
+        .order-number { 
+            font-family: monospace; 
+            background: #f5f5f5; 
+            padding: 4px 8px; 
+            border-radius: 4px; 
+            font-size: 14px;
+        }
+        .order-status { 
+            display: inline-block; 
+            padding: 4px 12px; 
+            border-radius: 20px; 
+            font-size: 12px; 
+            margin-left: 10px;
+            font-weight: bold;
+        }
+        .status-pending { background: #fff3cd; color: #856404; }
+        .status-paid { background: #d4edda; color: #155724; }
+        .status-completed { background: #d1ecf1; color: #0c5460; }
+        
+        .message { position: fixed; top: 20px; right: 20px; padding: 12px 20px; background: #000; color: white; border-radius: 4px; display: none; z-index: 1000; }
+        .message.active { display: block; }
+        
+        .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center; }
+        .modal.active { display: flex; }
+        .modal-content { background: white; border-radius: 4px; width: 90%; max-width: 500px; max-height: 90vh; overflow-y: auto; }
+        .modal-header { padding: 20px; border-bottom: 1px solid #e0e0e0; display: flex; justify-content: space-between; align-items: center; }
+        .modal-body { padding: 20px; }
+        
+        .customer-service { background: #f9f9f9; border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px; margin: 20px; }
+        .customer-service h3 { margin-bottom: 15px; font-size: 18px; text-align: center; color: #333; }
+        .customer-service p { color: #666; margin-bottom: 15px; font-size: 14px; text-align: center; }
+        .service-buttons { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 15px; }
+        .service-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 20px; background: #25D366; color: white; text-decoration: none; border-radius: 4px; font-size: 14px; transition: all 0.3s ease; border: none; cursor: pointer; }
+        .service-btn:hover { opacity: 0.9; transform: translateY(-2px); }
+        .service-btn.whatsapp { background: #25D366; }
+        .service-btn.wechat { background: #07C160; }
+        .service-btn.facebook { background: #1877F2; }
+        .service-btn.telegram { background: #0088cc; }
+        
+        /* 音乐播放器样式 */
+        .music-player-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #000;
+            color: white;
+            border: none;
+            cursor: pointer;
+            z-index: 999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .music-player-toggle:hover {
+            transform: scale(1.1);
+            background: #333;
+        }
+        
+        .music-player-toggle.playing {
+            background: #ff4444;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(255, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 68, 68, 0); }
+        }
+        
+        .music-player-modal .modal-content {
+            max-width: 400px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .music-player-modal .modal-header {
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .music-player-modal .modal-header h3 {
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .music-player-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .music-info {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .music-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: white;
+        }
+        
+        .music-status {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+        
+        .player-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .player-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        
+        .player-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.1);
+        }
+        
+        .player-btn.play-pause {
+            width: 60px;
+            height: 60px;
+            font-size: 24px;
+            background: rgba(255,255,255,0.3);
+        }
+        
+        .volume-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .volume-control input[type="range"] {
+            flex: 1;
+            height: 5px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 5px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        .volume-control input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: white;
+            cursor: pointer;
+        }
+        
+        .playlist {
+            margin-top: 20px;
+            max-height: 200px;
+            overflow-y: auto;
+            border-top: 1px solid rgba(255,255,255,0.2);
+            padding-top: 15px;
+        }
+        
+        .playlist-item {
+            padding: 10px;
+            margin-bottom: 5px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .playlist-item:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        
+        .playlist-item.active {
+            background: rgba(255,255,255,0.3);
+            border-left: 3px solid #ff4444;
+        }
+        
+        .playlist-item .song-title {
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
+        
+        .playlist-item .song-duration {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+        
+        @media (max-width: 768px) {
+            .products-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+                padding: 10px;
+            }
+            .product-img-container {
+                height: 160px;
+            }
+            .store-header { flex-direction: column; gap: 15px; text-align: center; }
+            .payment-icon { 
+                width: 60px; 
+                height: 60px; 
+            }
+            .service-buttons { flex-direction: column; }
+            .service-btn { width: 100%; }
+            .main-product-image {
+                height: 300px;
+            }
+            .product-detail-name {
+                font-size: 24px;
+            }
+            .product-detail-price {
+                font-size: 28px;
+            }
+            .music-player-toggle {
+                bottom: 70px;
+                right: 15px;
+                width: 45px;
+                height: 45px;
+                font-size: 18px;
+            }
+            .payment-option {
+                padding: 10px;
+            }
+            .game-info-row {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .products-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+                padding: 8px;
+            }
+            .product-img-container {
+                height: 140px;
+            }
+            .product-name {
+                font-size: 14px;
+                height: 40px;
+            }
+            .product-price {
+                font-size: 16px;
+            }
+            .main-product-image {
+                height: 250px;
+            }
+            .product-detail-name {
+                font-size: 20px;
+            }
+            .product-detail-price {
+                font-size: 24px;
+            }
+            .payment-methods {
+                flex-direction: column;
+            }
+        }
+        
+        .product-preview { width: 100%; max-height: 200px; object-fit: contain; background: #f8f8f8; border-radius: 4px; margin-top: 10px; border: 1px solid #e0e0e0; padding: 5px; }
+    </style>
+</head>
+<body>
+    <div id="message" class="message"></div>
+    
+    <!-- 音乐播放器按钮 -->
+    <button id="musicToggleBtn" class="music-player-toggle" onclick="toggleMusicPlayer()">
+        ♫
+    </button>
+    
+    <!-- 音乐播放器弹窗 -->
+    <div id="musicPlayerModal" class="modal music-player-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>
+                    <span>🎵</span>
+                    音乐播放器
+                </h3>
+                <button onclick="closeModal('musicPlayerModal')" style="background: none; border: none; font-size: 20px; cursor: pointer; color: white;">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="music-player-controls">
+                    <div class="music-info">
+                        <div id="currentSongTitle" class="music-title">选择歌曲</div>
+                        <div id="currentSongStatus" class="music-status">暂停中</div>
+                    </div>
+                    
+                    <div class="player-buttons">
+                        <button class="player-btn" onclick="playPrevious()" title="上一首">⏮</button>
+                        <button id="playPauseBtn" class="player-btn play-pause" onclick="togglePlay()" title="播放/暂停">▶</button>
+                        <button class="player-btn" onclick="playNext()" title="下一首">⏭</button>
+                    </div>
+                    
+                    <div class="volume-control">
+                        <span>🔈</span>
+                        <input type="range" id="volumeSlider" min="0" max="100" value="70" oninput="changeVolume(this.value)">
+                        <span>🔊</span>
+                    </div>
+                    
+                    <div class="playlist">
+                        <div id="playlistItems">
+                            <!-- 播放列表将通过JS动态生成 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 登录页面 -->
+    <div id="loginPage" class="page active">
+        <div class="login-container">
+            <!-- 修改标题部分，添加蓝勾认证标签 -->
+            <div class="title-container">
+                <h2 class="login-title">
+                    YP俱乐部
+                    <div class="verified-badge"></div>
+                </h2>
+            </div>
+            <div class="login-tabs">
+                <button class="login-tab active" onclick="switchAuthTab('login')">登录</button>
+                <button class="login-tab" onclick="switchAuthTab('register')">注册</button>
+            </div>
+            <form id="loginForm" class="login-form active" onsubmit="return loginUser(event)">
+                <div class="form-group">
+                    <input type="text" class="form-input" id="loginUsername" placeholder="用户名" required value="">
+                </div>
+                <div class="form-group">
+                    <input type="password" class="form-input" id="loginPassword" placeholder="密码" required value="">
+                </div>
+                <button type="submit" class="btn btn-black btn-block">登录</button>
+                <p style="text-align: center; margin-top: 15px; color: #666; font-size: 14px;">
+                   ©2025 YP俱乐部，保留所有权利，本网站由Charles独家开发提供技术支持，拥有SSM认证标签。
+                </p>
+            </form>
+            <form id="registerForm" class="login-form" onsubmit="return registerUser(event)">
+                <div class="form-group">
+                    <input type="text" class="form-input" id="registerUsername" placeholder="用户名" required>
+                </div>
+                <div class="form-group">
+                    <input type="password" class="form-input" id="registerPassword" placeholder="密码（至少6位）" required minlength="6">
+                </div>
+                <div class="form-group">
+                    <input type="password" class="form-input" id="registerConfirmPassword" placeholder="确认密码" required>
+                </div>
+                <button type="submit" class="btn btn-black btn-block">注册</button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- 商城页面 -->
+    <div id="storePage" class="page">
+        <div class="store-header">
+            <div class="store-title" id="storeTitle">
+                YP俱乐部
+                <div class="verified-badge" style="display: inline-block; width: 16px; height: 16px; margin-left: 5px;"></div>
+            </div>
+            <div class="user-info">
+                <span id="currentUser">用户</span>
+                <button class="btn btn-gray" onclick="logout()">退出</button>
+                <button class="btn btn-black" onclick="showAdminPage()" id="adminBtn" style="display: none;">管理后台</button>
+            </div>
+        </div>
+        <div id="customerService" class="customer-service" style="display: none;">
+            <h3>📞联系客服</h3>
+            <p>📢您购买了商品已付款了请带您的付款账单和您的登录的网站账号名字和订单号联系客服人员谢谢你的合作</p>
+            <div class="service-buttons" id="serviceButtons"></div>
+        </div>
+        <div style="padding: 30px 20px; text-align: center;">
+            <h3 style="font-size: 24px; margin-bottom: 10px;">欢迎选购</h3>
+            <p style="color: #666;">独域商城强力驱动3.0</p>
+        </div>
+        <div id="productsList" class="products-grid"></div>
+    </div>
+    
+    <!-- 商品详情页面 -->
+    <div id="productDetailPage" class="page">
+        <div class="store-header">
+            <button class="back-btn" onclick="showStorePage()">
+                ← 返回商城
+            </button>
+            <div class="store-title">
+                商品详情
+            </div>
+            <div style="width: 80px;"></div>
+        </div>
+        
+        <div class="product-detail-container">
+            <div id="detailContent" class="product-detail-content">
+                <!-- 商品详情内容动态加载 -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- 支付状态页面 -->
+    <div id="paymentStatusPage" class="page">
+        <div class="store-header">
+            <button class="back-btn" onclick="showStorePage()">
+                ← 返回商城
+            </button>
+            <div class="store-title">
+                支付状态
+            </div>
+            <div style="width: 80px;"></div>
+        </div>
+        
+        <div id="paymentStatusContent" class="payment-status-page">
+            <!-- 支付状态内容动态加载 -->
+        </div>
+    </div>
+    
+    <!-- 管理后台 -->
+    <div id="adminPage" class="page">
+        <div class="store-header">
+            <div class="store-title">管理后台</div>
+            <div>
+                <button class="btn btn-gray" onclick="showStorePage()">返回商城</button>
+            </div>
+        </div>
+        <div class="admin-nav">
+            <button class="nav-btn active" onclick="switchTab('products')">商品管理</button>
+            <button class="nav-btn" onclick="switchTab('orders')">订单管理</button>
+            <button class="nav-btn" onclick="switchTab('services')">客服管理</button>
+            <button class="nav-btn" onclick="switchTab('settings')">设置</button>
+        </div>
+        <div id="productsTab" class="admin-content tab-content active">
+            <div style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+                <h3>商品管理</h3>
+                <button class="btn btn-black" onclick="showAddProductModal()">添加商品</button>
+            </div>
+            <div style="margin-bottom: 30px; padding: 20px; background: #f5f5f5; border-radius: 4px;">
+                <div class="form-group">
+                    <input type="text" class="form-input" id="productName" placeholder="商品名称" required>
+                </div>
+                <div class="form-group">
+                    <input type="number" class="form-input" id="productPrice" placeholder="价格" step="0.01" min="0" required>
+                </div>
+                <div class="form-group">
+                    <textarea class="form-input" id="productDesc" placeholder="商品详细描述（支持多行，将在详情页显示）" rows="4"></textarea>
+                </div>
+                <div class="form-group">
+                    <input type="text" class="form-input" id="productImage" placeholder="图片链接" oninput="updateImagePreview(this.value)">
+                </div>
+                <div id="imagePreviewContainer" style="display: none;">
+                    <div style="color: #666; margin: 10px 0 5px; font-size: 14px;">图片预览：</div>
+                    <img id="imagePreview" class="product-preview" src="" alt="图片预览">
+                    <div id="imageInfo" style="color: #999; font-size: 12px; margin-top: 5px;"></div>
+                </div>
+                <button class="btn btn-black" onclick="addProduct()">添加商品</button>
+            </div>
+            <div id="adminProducts"></div>
+        </div>
+        <div id="ordersTab" class="admin-content tab-content">
+            <div style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+                <h3>订单管理</h3>
+                <select class="form-input" style="width: auto;" id="orderFilterSelect" onchange="filterOrders(this.value)">
+                    <option value="all">全部订单</option>
+                    <option value="today">今日订单</option>
+                    <option value="pending">待付款</option>
+                    <option value="paid">已付款</option>
+                    <option value="completed">已完成</option>
+                </select>
+            </div>
+            <div id="ordersList"></div>
+        </div>
+        <div id="servicesTab" class="admin-content tab-content">
+            <div style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+                <h3>客服管理</h3>
+                <button class="btn btn-black" onclick="showAddServiceModal()">添加客服</button>
+            </div>
+            <div style="margin-bottom: 30px; padding: 20px; background: #f5f5f5; border-radius: 4px;">
+                <div class="form-group">
+                    <select class="form-input" id="serviceType">
+                        <option value="whatsapp">WhatsApp</option>
+                        <option value="wechat">微信</option>
+                        <option value="telegram">Telegram</option>
+                        <option value="facebook">Facebook</option>
+                        <option value="phone">电话</option>
+                        <option value="other">其他</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <input type="text" class="form-input" id="serviceName" placeholder="客服名称">
+                </div>
+                <div class="form-group">
+                    <input type="text" class="form-input" id="serviceLink" placeholder="客服链接">
+                </div>
+                <button class="btn btn-black" onclick="addService()">添加客服</button>
+            </div>
+            <div id="servicesList"></div>
+        </div>
+        <div id="settingsTab" class="admin-content tab-content">
+            <h3 style="margin-bottom: 20px;">系统设置</h3>
+            <div class="form-group">
+                <label style="display: block; margin-bottom: 5px;">商城名称</label>
+                <input type="text" class="form-input" id="settingStoreName">
+            </div>
+            <div class="form-group">
+                <label style="display: block; margin-bottom: 5px;">快手链接</label>
+                <input type="text" class="form-input" id="settingKuaishouLink">
+            </div>
+            <div class="form-group">
+                <label style="display: block; margin-bottom: 10px;">客服功能</label>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <input type="checkbox" id="settingEnableService" style="width: auto;">
+                    <label for="settingEnableService">在商城页面显示客服功能</label>
+                </div>
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 30px;">
+                <button class="btn btn-black" onclick="saveSettings()">保存设置</button>
+                <button class="btn btn-gray" onclick="exportData()">备份数据</button>
+                <button class="btn btn-gray" onclick="importData()">恢复数据</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 订单确认模态框（包含游戏信息填写） -->
+    <div id="orderModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>填写订单信息</h3>
+                <button onclick="closeModal('orderModal')" style="background: none; border: none; font-size: 20px; cursor: pointer;">×</button>
+            </div>
+            <div class="modal-body">
+                <div style="text-align: center; margin: 20px 0;">
+                    <div style="font-size: 14px; color: #666; margin-bottom: 5px;">订单号</div>
+                    <div id="orderNumber" style="font-family: monospace; font-size: 20px; font-weight: bold; margin: 10px 0; padding: 10px; background: #f5f5f5; border-radius: 4px;"></div>
+                    <div style="font-size: 12px; color: #999; margin-top: 5px;">请保存订单号用于联系客服</div>
+                </div>
+                <div style="margin: 20px 0; padding: 15px; background: #f5f5f5; border-radius: 4px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <span>商品：</span>
+                        <span id="orderProductName"></span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <span>价格：</span>
+                        <span id="orderProductPrice"></span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-weight: bold; margin-top: 10px; padding-top: 10px; border-top: 1px solid #ddd;">
+                        <span>应付：</span>
+                        <span id="orderTotal"></span>
+                    </div>
+                </div>
+                
+                <!-- 游戏信息填写部分 -->
+                <div class="game-info-form">
+                    <div class="game-info-title">
+                        <i>🎮</i> 游戏信息填写
+                    </div>
+                    
+                    <div class="game-info-row">
+                        <div class="game-info-group">
+                            <label class="required-field">游戏名字</label>
+                            <input type="text" class="form-input" id="gameName" placeholder="请输入您的游戏角色名" required>
+                        </div>
+                        <div class="game-info-group">
+                            <label class="required-field">游戏大区</label>
+                            <input type="text" class="form-input" id="gameRegion" placeholder="例如：艾欧尼亚、黑色玫瑰等" required>
+                        </div>
+                    </div>
+                    
+                    <div class="game-info-group">
+                        <label class="required-field">指定打手名字（可选）</label>
+                        <input type="text" class="form-input" id="specifiedPlayer" placeholder="如果您有指定打手，请填写打手名字">
+                    </div>
+                    
+                    <div class="game-info-group">
+                        <label>其他备注（可选）</label>
+                        <textarea class="form-input" id="orderRemark" placeholder="请填写其他特殊要求或备注..." rows="3"></textarea>
+                    </div>
+                </div>
+                
+                <div style="margin: 20px 0;">
+                    <div style="color: #666; margin-bottom: 15px;">请选择支付方式：</div>
+                    <div class="payment-methods">
+                        <div class="payment-option active" onclick="selectPayment('tng')">
+                            <div class="payment-icon">
+                                <img src="https://i.ibb.co/mC5YR8G9/IMG-5127.png" alt="Touch'n Go图标">
+                            </div>
+                            <div class="payment-name">Touch 'n Go</div>
+                        </div>
+                        <div class="payment-option" onclick="selectPayment('alipay')">
+                            <div class="payment-icon">
+                                <img src="https://i.ibb.co/vCYgSkkK/IMG-5128.png" alt="支付宝图标">
+                            </div>
+                            <div class="payment-name">支付宝</div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 15px; padding: 10px; background: #fff3cd; border-radius: 4px; font-size: 14px;">
+                        💡 请根据您选择的支付方式完成支付，然后联系客服
+                    </div>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn btn-gray" style="flex: 1;" onclick="closeModal('orderModal')">取消</button>
+                    <button class="btn btn-green" style="flex: 1;" onclick="completeOrder()">提交订单</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========== 音乐播放器功能 ==========
+        let audioPlayer = null;
+        let currentSongIndex = 0;
+        let isPlaying = false;
+        
+        // 您的音乐列表
+        const musicList = [
+            { 
+                id: 1, 
+                title: "歌曲1", 
+                url: "http://music.163.com/song/media/outer/url?id=2116252251.mp3",
+                duration: "3:59"
+            },
+            { 
+                id: 2, 
+                title: "歌曲2", 
+                url: "http://music.163.com/song/media/outer/url?id=1945316194.mp3",
+                duration: "4:12"
+            },
+            { 
+                id: 3, 
+                title: "歌曲3", 
+                url: "http://music.163.com/song/media/outer/url?id=1895330088.mp3",
+                duration: "3:58"
+            },
+            { 
+                id: 4, 
+                title: "歌曲4", 
+                url: "http://music.163.com/song/media/outer/url?id=2112512190.mp3",
+                duration: "4:25"
+            },
+            { 
+                id: 5, 
+                title: "歌曲5", 
+                url: "http://music.163.com/song/media/outer/url?id=1842728629.mp3",
+                duration: "3:30"
+            },
+            { 
+                id: 6, 
+                title: "歌曲6", 
+                url: "http://music.163.com/song/media/outer/url?id=865632948.mp3",
+                duration: "4:05"
+            },
+            { 
+                id: 7, 
+                title: "歌曲7", 
+                url: "http://music.163.com/song/media/outer/url?id=441491828.mp3",
+                duration: "3:52"
+            },
+            { 
+                id: 8, 
+                title: "歌曲8", 
+                url: "http://music.163.com/song/media/outer/url?id=1926623288.mp3",
+                duration: "4:18"
+            }
+        ];
+        
+        // 初始化音乐播放器
+        function initMusicPlayer() {
+            audioPlayer = new Audio();
+            audioPlayer.volume = 0.7; // 默认音量70%
+            
+            // 音频事件监听
+            audioPlayer.addEventListener('play', () => {
+                isPlaying = true;
+                updatePlayButton();
+                updateMusicToggleButton();
+                updateSongStatus();
+            });
+            
+            audioPlayer.addEventListener('pause', () => {
+                isPlaying = false;
+                updatePlayButton();
+                updateMusicToggleButton();
+                updateSongStatus();
+            });
+            
+            audioPlayer.addEventListener('ended', () => {
+                playNext();
+            });
+            
+            audioPlayer.addEventListener('error', (e) => {
+                console.error('音频播放错误:', e);
+                showMessage('音乐加载失败，请检查网络或更换歌曲', 'error');
+                playNext(); // 出错时自动播放下一首
+            });
+            
+            // 初始化播放列表
+            renderPlaylist();
+            
+            // 从本地存储恢复设置
+            const savedVolume = localStorage.getItem('musicVolume');
+            if (savedVolume) {
+                audioPlayer.volume = savedVolume / 100;
+                document.getElementById('volumeSlider').value = savedVolume;
+            }
+            
+            const savedSongIndex = localStorage.getItem('currentSongIndex');
+            if (savedSongIndex !== null) {
+                currentSongIndex = parseInt(savedSongIndex);
+                loadSong(currentSongIndex);
+            }
+        }
+        
+        // 渲染播放列表
+        function renderPlaylist() {
+            const playlistContainer = document.getElementById('playlistItems');
+            playlistContainer.innerHTML = musicList.map((song, index) => `
+                <div class="playlist-item ${index === currentSongIndex ? 'active' : ''}" 
+                     onclick="playSong(${index})">
+                    <div class="song-title">${song.title}</div>
+                    <div class="song-duration">${song.duration}</div>
+                </div>
+            `).join('');
+        }
+        
+        // 播放指定索引的歌曲
+        function playSong(index) {
+            if (index < 0 || index >= musicList.length) return;
+            
+            currentSongIndex = index;
+            localStorage.setItem('currentSongIndex', index);
+            
+            const song = musicList[index];
+            audioPlayer.src = song.url;
+            audioPlayer.load();
+            
+            // 更新UI
+            document.getElementById('currentSongTitle').textContent = song.title;
+            updatePlaylistActiveItem();
+            
+            // 尝试播放
+            audioPlayer.play().catch(error => {
+                console.error('播放失败:', error);
+                showMessage('无法播放此歌曲，尝试播放下一首', 'error');
+                playNext();
+            });
+        }
+        
+        // 加载歌曲（不立即播放）
+        function loadSong(index) {
+            if (index < 0 || index >= musicList.length) return;
+            
+            currentSongIndex = index;
+            const song = musicList[index];
+            audioPlayer.src = song.url;
+            
+            document.getElementById('currentSongTitle').textContent = song.title;
+            updatePlaylistActiveItem();
+        }
+        
+        // 播放/暂停切换
+        function togglePlay() {
+            if (!audioPlayer.src) {
+                playSong(currentSongIndex);
+                return;
+            }
+            
+            if (isPlaying) {
+                audioPlayer.pause();
+            } else {
+                audioPlayer.play().catch(error => {
+                    console.error('播放失败:', error);
+                    showMessage('无法播放音乐，请检查网络连接', 'error');
+                });
+            }
+        }
+        
+        // 播放上一首
+        function playPrevious() {
+            currentSongIndex--;
+            if (currentSongIndex < 0) {
+                currentSongIndex = musicList.length - 1;
+            }
+            playSong(currentSongIndex);
+        }
+        
+        // 播放下一首
+        function playNext() {
+            currentSongIndex++;
+            if (currentSongIndex >= musicList.length) {
+                currentSongIndex = 0;
+            }
+            playSong(currentSongIndex);
+        }
+        
+        // 切换音乐播放器显示/隐藏
+        function toggleMusicPlayer() {
+            const modal = document.getElementById('musicPlayerModal');
+            if (modal.classList.contains('active')) {
+                closeModal('musicPlayerModal');
+            } else {
+                modal.classList.add('active');
+            }
+        }
+        
+        // 更改音量
+        function changeVolume(value) {
+            const volume = value / 100;
+            audioPlayer.volume = volume;
+            localStorage.setItem('musicVolume', value);
+        }
+        
+        // 更新播放按钮状态
+        function updatePlayButton() {
+            const button = document.getElementById('playPauseBtn');
+            if (isPlaying) {
+                button.innerHTML = '⏸';
+                button.title = '暂停';
+            } else {
+                button.innerHTML = '▶';
+                button.title = '播放';
+            }
+        }
+        
+        // 更新音乐切换按钮状态
+        function updateMusicToggleButton() {
+            const button = document.getElementById('musicToggleBtn');
+            if (isPlaying) {
+                button.classList.add('playing');
+                button.innerHTML = '♫';
+            } else {
+                button.classList.remove('playing');
+                button.innerHTML = '♫';
+            }
+        }
+        
+        // 更新歌曲状态显示
+        function updateSongStatus() {
+            const statusEl = document.getElementById('currentSongStatus');
+            if (isPlaying) {
+                statusEl.textContent = '播放中';
+            } else {
+                statusEl.textContent = '暂停中';
+            }
+        }
+        
+        // 更新播放列表激活项
+        function updatePlaylistActiveItem() {
+            const items = document.querySelectorAll('.playlist-item');
+            items.forEach((item, index) => {
+                if (index === currentSongIndex) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+        }
+        
+        // 页面加载时初始化音乐播放器
+        window.addEventListener('load', () => {
+            initMusicPlayer();
+        });
+        
+        // ========== 商城系统核心代码 ==========
+        console.log('商城系统启动...');
+        
+        // 🔥 修复：智能API地址检测
+        let API_BASE_URL;
+        const hostname = window.location.hostname;
+        
+        // 检测当前运行环境
+        if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '') {
+            // 本地开发环境
+            API_BASE_URL = 'http://localhost:3000/api';
+            console.log('🏠 本地开发环境，API地址：', API_BASE_URL);
+        } else if (hostname.includes('railway') || hostname.includes('railway.app')) {
+            // Railway生产环境
+            API_BASE_URL = `https://${hostname}/api`;
+            console.log('🚄 Railway生产环境，API地址：', API_BASE_URL);
+        } else if (hostname.includes('github.io') || hostname.includes('vercel.app') || hostname.includes('netlify.app')) {
+            // 静态托管环境 - 需要配置正确的后端地址
+            console.warn('⚠️ 静态托管环境，请设置正确的后端API地址');
+            API_BASE_URL = 'https://your-backend-server.com/api'; // 需要修改为实际的后端地址
+        } else {
+            // 其他生产环境
+            const protocol = window.location.protocol;
+            API_BASE_URL = `${protocol}//${hostname}:3000/api`;
+            console.log('🌐 生产环境，API地址：', API_BASE_URL);
+        }
+        
+        let data = {
+            products: [],
+            services: [],
+            settings: {},
+            orders: []
+        };
+        
+        let currentUser = null;
+        let currentProductId = null;
+        let selectedPayment = 'tng';
+        let autoRefreshInterval = null;
+        let currentOrderFilter = 'all';
+        let currentOrderNumber = null;
+
+        // ========== 新增：商品详情功能 ==========
+        function showProductDetail(productId) {
+            const product = data.products.find(p => p.id == productId);
+            if (!product) {
+                showMessage('商品不存在！', 'error');
+                return;
+            }
+            
+            renderProductDetail(product);
+            showPage('productDetailPage');
+        }
+        
+        function renderProductDetail(product) {
+            const container = document.getElementById('detailContent');
+            
+            container.innerHTML = `
+                <div class="product-image-section">
+                    <div class="main-product-image">
+                        <img src="${product.image || 'https://via.placeholder.com/600x400.png?text=商品大图'}" 
+                             alt="${product.name}"
+                             onerror="this.onerror=null; this.src='https://via.placeholder.com/600x400.png?text=商品大图'">
+                    </div>
+                </div>
+                
+                <div class="product-info-section">
+                    <h1 class="product-detail-name">${product.name}</h1>
+                    <div class="product-detail-price">¥${product.price.toFixed(2)}</div>
+                    
+                    <div class="product-description">
+                        <div class="description-title">📋 商品描述</div>
+                        <div class="description-content">
+                            ${product.description || '暂无详细描述'}
+                        </div>
+                    </div>
+                    
+                    <div class="purchase-section">
+                        <button class="btn btn-black purchase-btn" onclick="showOrderModal(${product.id})">
+                            💳 立即购买
+                        </button>
+                    </div>
+                    
+                    <div class="detail-footer">
+                        <p>©2025 YP俱乐部 保留所有权利</p>
+                        <p>本网站由Charles开发搭建提供技术支持，拥有SSM认证标签</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ========== 修改：商品列表渲染，添加查看详情功能 ==========
+        function renderProducts() {
+            const container = document.getElementById('productsList');
+            
+            if (!data.products || data.products.length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: 50px; color: #999;">暂无商品</div>';
+                return;
+            }
+            
+            container.innerHTML = data.products.map(product => `
+                <div class="product-card">
+                    <div class="product-img-container" onclick="showProductDetail(${product.id})">
+                        <img src="${product.image || 'https://via.placeholder.com/300x250.png?text=商品'}" 
+                             alt="${product.name}" 
+                             class="product-img"
+                             onerror="this.onerror=null; this.src='https://via.placeholder.com/300x250.png?text=商品'">
+                    </div>
+                    <div class="product-info">
+                        <div class="product-name" onclick="showProductDetail(${product.id})">
+                            ${product.name}
+                        </div>
+                        <div class="product-price">¥${product.price.toFixed(2)}</div>
+                        <p style="color: #666; font-size: 14px; margin-bottom: 10px; min-height: 40px; line-height: 1.4;">
+                            ${product.description ? (product.description.length > 60 ? product.description.substring(0, 60) + '...' : product.description) : '暂无描述'}
+                        </p>
+                        <div class="product-actions">
+                            <button class="btn view-detail-btn" onclick="showProductDetail(${product.id})">
+                                查看详情
+                            </button>
+                            <button class="btn buy-btn" onclick="showOrderModal(${product.id})">
+                                立即购买
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ========== 修改：管理员商品列表，添加预览按钮 ==========
+        function renderAdminProducts() {
+            const container = document.getElementById('adminProducts');
+            
+            if (!data.products || data.products.length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">暂无商品</div>';
+                return;
+            }
+            
+            container.innerHTML = data.products.map(product => `
+                <div style="border: 1px solid #e0e0e0; border-radius: 8px; padding: 15px; margin-bottom: 15px;">
+                    <div style="display: flex; align-items: flex-start; gap: 15px;">
+                        <div style="width: 80px; height: 80px; overflow: hidden; border-radius: 4px; flex-shrink: 0;">
+                            <img src="${product.image || 'https://via.placeholder.com/80x80.png?text=商品'}" 
+                                 alt="${product.name}" 
+                                 style="width: 100%; height: 100%; object-fit: contain; background: #f5f5f5;"
+                                 onerror="this.src='https://via.placeholder.com/80x80.png?text=商品'">
+                        </div>
+                        <div style="flex: 1;">
+                            <div style="font-weight: bold; margin-bottom: 5px;">${product.name}</div>
+                            <div style="color: #666; font-size: 14px; margin-bottom: 5px;">${product.description || ''}</div>
+                            <div style="font-weight: bold; color: #ff4444;">¥${product.price.toFixed(2)}</div>
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 5px;">
+                            <button class="btn btn-gray" onclick="showProductDetail(${product.id})">预览</button>
+                            <button class="btn btn-red" onclick="deleteProduct(${product.id})">删除</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ========== 其他原有函数保持不变 ==========
+        async function loadAllData() {
+            try {
+                console.log('🔄 从后端加载所有数据...');
+                console.log('API地址：', API_BASE_URL);
+                
+                // 测试连接
+                const testRes = await fetch(`${API_BASE_URL}/test`);
+                console.log('连接测试结果：', await testRes.json());
+                
+                // 加载商品
+                const productsRes = await fetch(`${API_BASE_URL}/products`);
+                console.log('商品加载状态：', productsRes.status);
+                const productsData = await productsRes.json();
+                console.log('商品数据：', productsData);
+                if (productsData.success) data.products = productsData.data || [];
+                
+                // 加载设置
+                const settingsRes = await fetch(`${API_BASE_URL}/settings`);
+                const settingsData = await settingsRes.json();
+                if (settingsData.success) data.settings = settingsData.data || {};
+                
+                // 加载客服
+                const servicesRes = await fetch(`${API_BASE_URL}/services/all`);
+                const servicesData = await servicesRes.json();
+                if (servicesData.success) data.services = servicesData.data || [];
+                
+                // 加载订单
+                const ordersRes = await fetch(`${API_BASE_URL}/orders`);
+                const ordersData = await ordersRes.json();
+                if (ordersData.success) data.orders = ordersData.data || [];
+                
+                console.log('✅ 所有数据加载完成');
+                console.log('商品数量：', data.products.length);
+                console.log('客服数量：', data.services.length);
+                console.log('订单数量：', data.orders.length);
+                
+                return true;
+            } catch (error) {
+                console.error('❌ 加载数据失败:', error);
+                showMessage('无法连接到服务器，请检查网络连接和后端是否运行', 'error');
+                return false;
+            }
+        }
+
+        function startAutoRefresh() {
+            if (autoRefreshInterval) clearInterval(autoRefreshInterval);
+            
+            autoRefreshInterval = setInterval(async () => {
+                if (document.getElementById('storePage').classList.contains('active')) {
+                    await loadAllData();
+                    renderProducts();
+                    renderCustomerService();
+                }
+            }, 3000);
+        }
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('页面初始化...');
+            
+            // 测试后端连接
+            try {
+                const testRes = await fetch(`${API_BASE_URL}/test`);
+                const testData = await testRes.json();
+                console.log('后端连接测试：', testData);
+            } catch (error) {
+                console.error('后端连接失败：', error);
+                showMessage('后端服务器连接失败，请确保后端正在运行', 'error');
+            }
+            
+            await loadAllData();
+            checkLogin();
+            startAutoRefresh();
+        });
+
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            document.getElementById(pageId).classList.add('active');
+        }
+
+        function showStorePage() {
+            showPage('storePage');
+            document.getElementById('currentUser').textContent = currentUser ? currentUser.username : '用户';
+            document.getElementById('adminBtn').style.display = currentUser && currentUser.isAdmin ? 'inline-block' : 'none';
+            renderProducts();
+            renderCustomerService();
+        }
+
+        // ========== 用户认证 ==========
+        function checkLogin() {
+            const savedUser = localStorage.getItem('mallCurrentUser');
+            if (savedUser) {
+                try {
+                    currentUser = JSON.parse(savedUser);
+                    showStorePage();
+                    console.log('用户已登录：', currentUser.username);
+                } catch (e) {
+                    console.error('登录信息解析失败');
+                    localStorage.removeItem('mallCurrentUser');
+                }
+            }
+        }
+
+        function switchAuthTab(tab) {
+            document.querySelectorAll('.login-tab').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            document.getElementById('loginForm').classList.remove('active');
+            document.getElementById('registerForm').classList.remove('active');
+            document.getElementById(tab + 'Form').classList.add('active');
+        }
+
+        async function loginUser(event) {
+            event.preventDefault();
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            
+            if (!username || !password) {
+                showMessage('请填写用户名和密码！', 'error');
+                return false;
+            }
+            
+            // 显示加载状态
+            const submitBtn = event.target.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = '登录中...';
+            submitBtn.disabled = true;
+            
+            try {
+                console.log('尝试登录：', username);
+                console.log('API请求地址：', `${API_BASE_URL}/login`);
+                
+                const response = await fetch(`${API_BASE_URL}/login`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        username, 
+                        password 
+                    })
+                });
+                
+                console.log('登录响应状态：', response.status);
+                console.log('登录响应头：', response.headers);
+                
+                const result = await response.json();
+                console.log('登录响应数据：', result);
+                
+                if (result.success) {
+                    currentUser = result.data;
+                    localStorage.setItem('mallCurrentUser', JSON.stringify(currentUser));
+                    
+                    await loadAllData();
+                    showStorePage();
+                    showMessage('登录成功！');
+                    
+                    // 重置登录表单
+                    document.getElementById('loginUsername').value = '';
+                    document.getElementById('loginPassword').value = '';
+                } else {
+                    showMessage(result.error || '登录失败！', 'error');
+                    if (result.hint) {
+                        console.log('提示：', result.hint);
+                    }
+                }
+            } catch (error) {
+                console.error('登录错误详情：', error);
+                showMessage('登录失败，请检查：1.后端是否运行 2.网络连接', 'error');
+            } finally {
+                // 恢复按钮状态
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            }
+            
+            return false;
+        }
+
+        async function registerUser(event) {
+            event.preventDefault();
+            const username = document.getElementById('registerUsername').value.trim();
+            const password = document.getElementById('registerPassword').value;
+            const confirmPassword = document.getElementById('registerConfirmPassword').value;
+            
+            if (!username || !password || !confirmPassword) {
+                showMessage('请填写所有字段！', 'error');
+                return false;
+            }
+            
+            if (password !== confirmPassword) {
+                showMessage('两次输入的密码不一致！', 'error');
+                return false;
+            }
+            
+            if (password.length < 6) {
+                showMessage('密码至少需要6位！', 'error');
+                return false;
+            }
+            
+            // 显示加载状态
+            const submitBtn = event.target.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = '注册中...';
+            submitBtn.disabled = true;
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/register`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        username, 
+                        password
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    currentUser = result.data;
+                    localStorage.setItem('mallCurrentUser', JSON.stringify(currentUser));
+                    
+                    await loadAllData();
+                    showStorePage();
+                    showMessage('注册成功！已自动登录');
+                    
+                    // 重置注册表单
+                    document.getElementById('registerUsername').value = '';
+                    document.getElementById('registerPassword').value = '';
+                    document.getElementById('registerConfirmPassword').value = '';
+                } else {
+                    showMessage(result.error || '注册失败！', 'error');
+                }
+            } catch (error) {
+                console.error('注册错误：', error);
+                showMessage('注册失败，请检查网络连接', 'error');
+            } finally {
+                // 恢复按钮状态
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            }
+            
+            return false;
+        }
+
+        // ========== 商品管理 ==========
+        async function addProduct() {
+            const name = document.getElementById('productName').value.trim();
+            const price = parseFloat(document.getElementById('productPrice').value);
+            const description = document.getElementById('productDesc').value.trim();
+            const image = document.getElementById('productImage').value.trim();
+            
+            if (!name || !price) {
+                showMessage('请填写商品名称和价格！', 'error');
+                return;
+            }
+            
+            if (price <= 0) {
+                showMessage('价格必须大于0！', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/products/add`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        name, 
+                        price, 
+                        description, 
+                        image: image || 'https://via.placeholder.com/300x250.png?text=商品' 
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    await loadAllData();
+                    
+                    // 重置表单
+                    document.getElementById('productName').value = '';
+                    document.getElementById('productPrice').value = '';
+                    document.getElementById('productDesc').value = '';
+                    document.getElementById('productImage').value = '';
+                    document.getElementById('imagePreviewContainer').style.display = 'none';
+                    
+                    renderAdminProducts();
+                    renderProducts();
+                    showMessage('商品添加成功！');
+                } else {
+                    showMessage(result.error || '添加商品失败！', 'error');
+                }
+            } catch (error) {
+                console.error('添加商品错误：', error);
+                showMessage('添加商品失败，请重试', 'error');
+            }
+        }
+
+        async function deleteProduct(productId) {
+            if (!confirm('确定要删除这个商品吗？')) return;
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/products/delete`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: productId })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    await loadAllData();
+                    renderAdminProducts();
+                    renderProducts();
+                    showMessage('商品已删除！');
+                } else {
+                    showMessage(result.error || '删除商品失败！', 'error');
+                }
+            } catch (error) {
+                console.error('删除商品错误：', error);
+                showMessage('删除失败，请重试', 'error');
+            }
+        }
+
+        // ========== 订单管理 ==========
+        function showOrderModal(productId) {
+            if (!currentUser) {
+                showMessage('请先登录！', 'error');
+                return;
+            }
+            
+            const product = data.products.find(p => p.id == productId);
+            if (!product) {
+                showMessage('商品不存在！', 'error');
+                return;
+            }
+            
+            currentProductId = productId;
+            
+            // 生成订单号
+            const now = new Date();
+            currentOrderNumber = 'DD' + now.getFullYear().toString().substr(2) + 
+                               (now.getMonth() + 1).toString().padStart(2, '0') + 
+                               now.getDate().toString().padStart(2, '0') + 
+                               Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+            
+            document.getElementById('orderNumber').textContent = currentOrderNumber;
+            document.getElementById('orderProductName').textContent = product.name;
+            document.getElementById('orderProductPrice').textContent = '¥' + product.price.toFixed(2);
+            document.getElementById('orderTotal').textContent = '¥' + product.price.toFixed(2);
+            
+            // 重置表单
+            document.getElementById('gameName').value = '';
+            document.getElementById('gameRegion').value = '';
+            document.getElementById('specifiedPlayer').value = '';
+            document.getElementById('orderRemark').value = '';
+            
+            document.getElementById('orderModal').classList.add('active');
+        }
+
+        // ========== 修改支付完成函数 ==========
+        async function completeOrder() {
+            const product = data.products.find(p => p.id == currentProductId);
+            if (!product) {
+                showMessage('商品不存在！', 'error');
+                return;
+            }
+            
+            // 验证必填字段
+            const gameName = document.getElementById('gameName').value.trim();
+            const gameRegion = document.getElementById('gameRegion').value.trim();
+            const specifiedPlayer = document.getElementById('specifiedPlayer').value.trim();
+            const orderRemark = document.getElementById('orderRemark').value.trim();
+            
+            if (!gameName) {
+                showMessage('请填写游戏名字！', 'error');
+                document.getElementById('gameName').focus();
+                return;
+            }
+            
+            if (!gameRegion) {
+                showMessage('请填写游戏大区！', 'error');
+                document.getElementById('gameRegion').focus();
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/orders/add`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        orderNumber: currentOrderNumber,
+                        userId: currentUser.username,
+                        productId: product.id,
+                        productName: product.name,
+                        productPrice: product.price,
+                        totalAmount: product.price,
+                        paymentMethod: selectedPayment,
+                        status: 'pending',
+                        gameName: gameName,
+                        gameRegion: gameRegion,
+                        specifiedPlayer: specifiedPlayer || '',
+                        orderRemark: orderRemark || ''
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    await loadAllData();
+                    closeModal('orderModal');
+                    
+                    // 跳转到支付状态页面
+                    showPaymentStatusPage(currentOrderNumber, product, selectedPayment);
+                    
+                    showMessage(`订单创建成功！订单号：${currentOrderNumber}`);
+                } else {
+                    showMessage(result.error || '创建订单失败！', 'error');
+                }
+            } catch (error) {
+                console.error('创建订单错误：', error);
+                showMessage('创建订单失败', 'error');
+            }
+        }
+
+        // ========== 新增：显示支付状态页面 ==========
+        function showPaymentStatusPage(orderNumber, product, paymentMethod) {
+            const paymentMethodText = paymentMethod === 'tng' ? 'Touch \'n Go' : '支付宝';
+            const paymentIcon = paymentMethod === 'tng' ? 
+                'https://i.ibb.co/mC5YR8G9/IMG-5127.png' :
+                'https://i.ibb.co/vCYgSkkK/IMG-5128.png';
+            
+            const container = document.getElementById('paymentStatusContent');
+            container.innerHTML = `
+                <div class="payment-status-icon pending">
+                    ⏳
+                </div>
+                <h2 style="margin-bottom: 10px;">支付等待中</h2>
+                <p style="color: #666; margin-bottom: 30px;">请使用 ${paymentMethodText} 完成支付，然后联系客服</p>
+                
+                <div class="payment-details">
+                    <div class="payment-detail-item">
+                        <span class="payment-detail-label">订单号</span>
+                        <span class="payment-detail-value">${orderNumber}</span>
+                    </div>
+                    <div class="payment-detail-item">
+                        <span class="payment-detail-label">商品名称</span>
+                        <span class="payment-detail-value">${product.name}</span>
+                    </div>
+                    <div class="payment-detail-item">
+                        <span class="payment-detail-label">支付方式</span>
+                        <span class="payment-detail-value">
+                            <img src="${paymentIcon}" alt="${paymentMethodText}" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 5px;">
+                            ${paymentMethodText}
+                        </span>
+                    </div>
+                    <div class="payment-detail-item">
+                        <span class="payment-detail-label">支付金额</span>
+                        <span class="payment-detail-value" style="color: #ff4444; font-size: 18px;">¥${product.price.toFixed(2)}</span>
+                    </div>
+                </div>
+                
+                <div style="margin: 20px 0; padding: 15px; background: #fff3cd; border-radius: 8px; color: #856404;">
+                    <h4 style="margin-bottom: 10px;">📋 支付说明</h4>
+                    <p style="font-size: 14px; margin-bottom: 10px;">1. 请使用 ${paymentMethodText} 完成支付</p>
+                    <p style="font-size: 14px; margin-bottom: 10px;">2. 使用下方的客服按钮联系客服然后客服会发给你付款二维码支付完成后请截图保存付款凭证</p>
+                    <p style="font-size: 14px;">3. 使用下方的客服按钮联系客服，提供订单号和付款凭证</p>
+                </div>
+                
+                <div class="payment-action-buttons">
+                    <button class="btn btn-gray" onclick="showStorePage()">
+                        返回商城
+                    </button>
+                    <button class="btn btn-black" onclick="contactCustomerService()">
+                        联系客服
+                    </button>
+                </div>
+                
+                <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; text-align: center; color: #999; font-size: 14px;">
+                    <p>付款后请及时联系客服，我们会尽快处理您的订单</p>
+                </div>
+            `;
+            
+            showPage('paymentStatusPage');
+        }
+
+        // ========== 新增：联系客服函数 ==========
+        function contactCustomerService() {
+            const enabledServices = data.services.filter(service => service.enabled !== false);
+            
+            if (enabledServices.length === 0) {
+                showMessage('暂无客服联系方式，请稍后再试', 'error');
+                return;
+            }
+            
+            // 获取第一个可用的客服链接
+            const firstService = enabledServices[0];
+            
+            // 跳转到客服链接
+            window.open(firstService.link, '_blank');
+            
+            // 复制订单号到剪贴板
+            copyOrderNumber();
+            showMessage('订单号已复制，请向客服提供此订单号');
+        }
+
+        function selectPayment(payment) {
+            selectedPayment = payment;
+            document.querySelectorAll('.payment-option').forEach(option => {
+                option.classList.remove('active');
+            });
+            event.target.closest('.payment-option').classList.add('active');
+        }
+
+        function copyOrderNumber() {
+            const orderNumber = currentOrderNumber || document.getElementById('orderNumber').textContent;
+            navigator.clipboard.writeText(orderNumber).then(() => {
+                showMessage('订单号已复制！');
+            }).catch(err => {
+                console.error('复制失败：', err);
+                showMessage('复制失败，请手动复制', 'error');
+            });
+        }
+
+        function filterOrders(filterType) {
+            currentOrderFilter = filterType;
+            renderOrders();
+        }
+
+        function renderOrders() {
+            const container = document.getElementById('ordersList');
+            
+            if (!data.orders || data.orders.length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">暂无订单记录</div>';
+                return;
+            }
+            
+            // 设置筛选下拉框的值
+            document.getElementById('orderFilterSelect').value = currentOrderFilter;
+            
+            let filteredOrders = [...data.orders];
+            
+            // 根据当前筛选条件过滤订单
+            if (currentOrderFilter === 'today') {
+                const today = new Date();
+                const todayStr = today.toISOString().split('T')[0];
+                
+                filteredOrders = data.orders.filter(order => {
+                    if (!order.createdAt) return false;
+                    
+                    try {
+                        const orderDate = new Date(order.createdAt);
+                        const orderDateStr = orderDate.toISOString().split('T')[0];
+                        return orderDateStr === todayStr;
+                    } catch (e) {
+                        console.error('日期解析错误:', e);
+                        return false;
+                    }
+                });
+            } else if (currentOrderFilter === 'pending') {
+                filteredOrders = data.orders.filter(order => order.status === 'pending');
+            } else if (currentOrderFilter === 'paid') {
+                filteredOrders = data.orders.filter(order => order.status === 'paid');
+            } else if (currentOrderFilter === 'completed') {
+                filteredOrders = data.orders.filter(order => order.status === 'completed');
+            }
+            
+            // 按时间倒序排列（最新的在前面）
+            filteredOrders.sort((a, b) => {
+                const dateA = new Date(a.createdAt || 0);
+                const dateB = new Date(b.createdAt || 0);
+                return dateB - dateA;
+            });
+            
+            if (filteredOrders.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #999;">
+                        没有找到符合条件的订单
+                    </div>`;
+                return;
+            }
+            
+            container.innerHTML = filteredOrders.map(order => `
+                <div class="order-card">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
+                        <div style="flex: 1;">
+                            <div style="font-weight: bold; margin-bottom: 8px;">
+                                <span class="order-number">${order.orderNumber || '无订单号'}</span>
+                                <span class="order-status status-${order.status}">
+                                    ${getStatusText(order.status)}
+                                </span>
+                            </div>
+                            <div style="color: #666; font-size: 14px; margin-bottom: 5px;">
+                                <strong>用户：</strong>${order.userId || '未知用户'}
+                            </div>
+                            <div style="color: #666; font-size: 14px;">
+                                <strong>下单时间：</strong>${order.createdAt ? new Date(order.createdAt).toLocaleString('zh-CN') : '无日期'}
+                            </div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-weight: bold; font-size: 18px; margin-bottom: 5px; color: #ff4444;">
+                                ¥${(order.totalAmount || 0).toFixed(2)}
+                            </div>
+                            <div style="color: #666; font-size: 14px;">
+                                <strong>支付方式：</strong>${order.paymentMethod === 'tng' ? 'Touch \'n Go' : 
+                                                        order.paymentMethod === 'alipay' ? '支付宝' : 
+                                                        order.paymentMethod || '未知'}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="color: #666; margin-bottom: 10px;">
+                        <strong>商品：</strong>${order.productName || '未知商品'}
+                    </div>
+                    
+                    <!-- 游戏信息显示 -->
+                    ${order.gameName || order.gameRegion ? `
+                    <div class="game-info-card">
+                        <div class="game-info-header">
+                            <span>🎮</span> 游戏信息
+                        </div>
+                        <div class="game-info-grid">
+                            <div class="game-info-item">
+                                <div class="game-info-label">游戏名字</div>
+                                <div class="game-info-value">${order.gameName || '未填写'}</div>
+                            </div>
+                            <div class="game-info-item">
+                                <div class="game-info-label">游戏大区</div>
+                                <div class="game-info-value">${order.gameRegion || '未填写'}</div>
+                            </div>
+                            ${order.specifiedPlayer ? `
+                            <div class="game-info-item">
+                                <div class="game-info-label">指定打手</div>
+                                <div class="game-info-value">${order.specifiedPlayer}</div>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                    ` : ''}
+                    
+                    <!-- 备注信息显示 -->
+                    ${order.orderRemark ? `
+                    <div class="remark-info">
+                        <div class="remark-label">
+                            <span>📝</span> 备注信息
+                        </div>
+                        <div class="remark-content">${order.orderRemark}</div>
+                    </div>
+                    ` : ''}
+                    
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px;">
+                        <button class="btn btn-gray" onclick="updateOrderStatus(${order.id}, 'paid')" 
+                                ${order.status === 'paid' || order.status === 'completed' ? 'disabled style="opacity:0.5"' : ''}>
+                            标记已付款
+                        </button>
+                        <button class="btn btn-green" onclick="updateOrderStatus(${order.id}, 'completed')"
+                                ${order.status === 'completed' ? 'disabled style="opacity:0.5"' : ''}>
+                            完成订单
+                        </button>
+                        <button class="btn btn-red" onclick="deleteOrder(${order.id})">删除</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function updateOrderStatus(orderId, status) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/orders/${orderId}/status`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    await loadAllData();
+                    renderOrders();
+                    showMessage('订单状态已更新');
+                } else {
+                    showMessage(result.error || '更新失败！', 'error');
+                }
+            } catch (error) {
+                console.error('更新订单状态错误：', error);
+                showMessage('更新失败，请重试', 'error');
+            }
+        }
+
+        async function deleteOrder(orderId) {
+            if (!confirm('确定要删除这个订单吗？此操作不可撤销！')) return;
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/orders/${orderId}`, {
+                    method: 'DELETE'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    await loadAllData();
+                    renderOrders();
+                    showMessage('订单已删除');
+                } else {
+                    showMessage(result.error || '删除失败！', 'error');
+                }
+            } catch (error) {
+                console.error('删除订单错误：', error);
+                showMessage('删除失败，请重试', 'error');
+            }
+        }
+
+        // ========== 客服管理功能 ==========
+        async function addService() {
+            const type = document.getElementById('serviceType').value;
+            const name = document.getElementById('serviceName').value.trim();
+            const link = document.getElementById('serviceLink').value.trim();
+            
+            if (!name || !link) {
+                showMessage('请填写客服名称和链接！', 'error');
+                return;
+            }
+            
+            if (!link.startsWith('http://') && !link.startsWith('https://')) {
+                showMessage('链接格式不正确，请以http://或https://开头', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/services/add`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        type, 
+                        name, 
+                        link,
+                        enabled: true 
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    await loadAllData();
+                    
+                    document.getElementById('serviceName').value = '';
+                    document.getElementById('serviceLink').value = '';
+                    
+                    renderServices();
+                    renderCustomerService();
+                    showMessage('客服添加成功！');
+                } else {
+                    showMessage(result.error || '添加客服失败！', 'error');
+                }
+            } catch (error) {
+                console.error('添加客服错误：', error);
+                showMessage('添加客服失败，请重试', 'error');
+            }
+        }
+
+        function renderServices() {
+            const container = document.getElementById('servicesList');
+            
+            if (!data.services || data.services.length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">暂无客服</div>';
+                return;
+            }
+            
+            container.innerHTML = data.services.map(service => `
+                <div style="border: 1px solid #e0e0e0; border-radius: 8px; padding: 15px; margin-bottom: 15px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div style="width: 40px; height: 40px; border-radius: 50%; background: #f0f0f0; display: flex; align-items: center; justify-content: center; font-size: 18px;">
+                                ${getServiceIcon(service.type)}
+                            </div>
+                            <div>
+                                <div style="font-weight: bold;">${service.name}</div>
+                                <div style="color: #666; font-size: 14px;">${getServiceTypeText(service.type)}</div>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <label style="font-size: 14px; display: flex; align-items: center; gap: 5px;">
+                                <input type="checkbox" ${service.enabled ? 'checked' : ''} 
+                                       onchange="toggleService(${service.id}, this.checked)">
+                                启用
+                            </label>
+                        </div>
+                    </div>
+                    <div style="color: #666; font-size: 14px; margin-bottom: 10px; word-break: break-all;">
+                        链接：<a href="${service.link}" target="_blank" style="color: #007bff;">${service.link}</a>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn btn-gray" onclick="editService(${service.id})">编辑</button>
+                        <button class="btn btn-red" onclick="deleteService(${service.id})">删除</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function toggleService(serviceId, enabled) {
+            try {
+                const service = data.services.find(s => s.id === serviceId);
+                if (!service) {
+                    showMessage('客服不存在！', 'error');
+                    return;
+                }
+                
+                const response = await fetch(`${API_BASE_URL}/services/update`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        id: serviceId,
+                        enabled: enabled 
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    await loadAllData();
+                    renderServices();
+                    renderCustomerService();
+                    showMessage(`客服已${enabled ? '启用' : '禁用'}`);
+                } else {
+                    showMessage('操作失败，请重试', 'error');
+                }
+            } catch (error) {
+                console.error('切换客服状态错误：', error);
+                showMessage('操作失败，请重试', 'error');
+            }
+        }
+
+        async function editService(serviceId) {
+            const service = data.services.find(s => s.id === serviceId);
+            if (!service) {
+                showMessage('客服不存在！', 'error');
+                return;
+            }
+            
+            const newName = prompt('请输入新的客服名称：', service.name);
+            if (newName === null) return;
+            
+            const newLink = prompt('请输入新的客服链接：', service.link);
+            if (newLink === null) return;
+            
+            if (!newLink.startsWith('http://') && !newLink.startsWith('https://')) {
+                showMessage('链接格式不正确，请以http://或https://开头', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/services/update`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        id: serviceId,
+                        name: newName.trim(),
+                        link: newLink.trim()
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    await loadAllData();
+                    renderServices();
+                    renderCustomerService();
+                    showMessage('客服信息已更新');
+                } else {
+                    showMessage('更新失败，请重试', 'error');
+                }
+            } catch (error) {
+                console.error('编辑客服错误：', error);
+                showMessage('更新失败，请重试', 'error');
+            }
+        }
+
+        async function deleteService(serviceId) {
+            const service = data.services.find(s => s.id === serviceId);
+            if (!service) {
+                showMessage('客服不存在！', 'error');
+                return;
+            }
+            
+            if (!confirm(`确定要删除客服 "${service.name}" 吗？`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/services/delete`, {
+                    method: 'DELETE'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    await loadAllData();
+                    renderServices();
+                    renderCustomerService();
+                    showMessage('客服已删除');
+                } else {
+                    showMessage('删除失败，请重试', 'error');
+                }
+            } catch (error) {
+                console.error('删除客服错误：', error);
+                showMessage('删除失败，请重试', 'error');
+            }
+        }
+
+        function renderCustomerService() {
+            const serviceContainer = document.getElementById('customerService');
+            const serviceButtons = document.getElementById('serviceButtons');
+            
+            const enabledServices = data.services.filter(service => service.enabled !== false);
+            
+            if (!data.settings.enableService || enabledServices.length === 0) {
+                serviceContainer.style.display = 'none';
+                return;
+            }
+            
+            serviceContainer.style.display = 'block';
+            serviceButtons.innerHTML = enabledServices.map(service => `
+                <a href="${service.link}" target="_blank" class="service-btn ${service.type}">
+                    ${getServiceIcon(service.type)} ${service.name}
+                </a>
+            `).join('');
+        }
+
+        function getServiceIcon(type) {
+            const icons = {
+                whatsapp: '📱',
+                wechat: '💬',
+                facebook: '📘',
+                telegram: '✈️',
+                phone: '📞',
+                other: '💁'
+            };
+            return icons[type] || '💁';
+        }
+
+        function getServiceTypeText(type) {
+            const texts = {
+                whatsapp: 'WhatsApp',
+                wechat: '微信',
+                facebook: 'Facebook',
+                telegram: 'Telegram',
+                phone: '电话',
+                other: '其他'
+            };
+            return texts[type] || '其他';
+        }
+
+        // ========== 系统设置 ==========
+        function loadSettings() {
+            if (data.settings) {
+                document.getElementById('settingStoreName').value = data.settings.storeName || '';
+                document.getElementById('settingKuaishouLink').value = data.settings.kuaishouLink || '';
+                document.getElementById('settingEnableService').checked = data.settings.enableService !== false;
+                
+                if (data.settings.storeName) {
+                    document.getElementById('storeTitle').textContent = data.settings.storeName;
+                }
+            }
+        }
+
+        async function saveSettings() {
+            const storeName = document.getElementById('settingStoreName').value;
+            const kuaishouLink = document.getElementById('settingKuaishouLink').value;
+            const enableService = document.getElementById('settingEnableService').checked;
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/settings/update`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        storeName, 
+                        kuaishouLink, 
+                        enableService 
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    await loadAllData();
+                    renderCustomerService();
+                    showMessage('设置保存成功');
+                } else {
+                    showMessage(result.error || '保存设置失败！', 'error');
+                }
+            } catch (error) {
+                console.error('保存设置错误：', error);
+                showMessage('保存设置失败，请重试', 'error');
+            }
+        }
+
+        // ========== 其他函数 ==========
+        function getStatusText(status) {
+            const statusMap = {
+                pending: '待付款',
+                paid: '已付款',
+                completed: '已完成'
+            };
+            return statusMap[status] || status;
+        }
+
+        function showMessage(text, type = 'success') {
+            const messageEl = document.getElementById('message');
+            messageEl.textContent = text;
+            messageEl.className = `message active`;
+            messageEl.style.background = type === 'error' ? '#ff4444' : 
+                                      type === 'warning' ? '#ff9800' : '#000000';
+            
+            setTimeout(() => {
+                messageEl.classList.remove('active');
+            }, 3000);
+        }
+
+        function showAdminPage() {
+            if (!currentUser || !currentUser.isAdmin) {
+                showMessage('需要管理员权限！', 'error');
+                return;
+            }
+            showPage('adminPage');
+            switchTab('products');
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(tab + 'Tab').classList.add('active');
+            
+            if (tab === 'products') {
+                renderAdminProducts();
+            } else if (tab === 'orders') {
+                currentOrderFilter = 'all';
+                renderOrders();
+            } else if (tab === 'services') {
+                renderServices();
+            } else if (tab === 'settings') {
+                loadSettings();
+            }
+        }
+
+        function logout() {
+            currentUser = null;
+            localStorage.removeItem('mallCurrentUser');
+            showPage('loginPage');
+            showMessage('已退出登录');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        function updateImagePreview(url) {
+            const previewContainer = document.getElementById('imagePreviewContainer');
+            const previewImg = document.getElementById('imagePreview');
+            const imageInfo = document.getElementById('imageInfo');
+            
+            if (url && url.startsWith('http')) {
+                previewImg.src = url;
+                previewContainer.style.display = 'block';
+                imageInfo.textContent = '图片链接有效，预览中...';
+                
+                previewImg.onload = function() {
+                    imageInfo.textContent = `图片尺寸：${this.naturalWidth}×${this.naturalHeight}`;
+                };
+                
+                previewImg.onerror = function() {
+                    imageInfo.textContent = '无法加载图片，链接可能无效';
+                };
+            } else {
+                previewContainer.style.display = 'none';
+            }
+        }
+
+        function showAddProductModal() {
+            document.getElementById('productName').focus();
+        }
+
+        function showAddServiceModal() {
+            document.getElementById('serviceName').focus();
+        }
+
+        function exportData() {
+            const dataToExport = {
+                products: data.products,
+                services: data.services,
+                settings: data.settings,
+                exportDate: new Date().toISOString()
+            };
+            
+            const dataStr = JSON.stringify(dataToExport, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = `YP俱乐部备份_${new Date().toISOString().slice(0,10)}.json`;
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+            
+            showMessage('数据备份已下载');
+        }
+
+        function importData() {
+            if (!confirm('恢复数据将覆盖现有数据，确定继续吗？')) return;
+            
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            
+            input.onchange = async function(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+                
+                try {
+                    const text = await file.text();
+                    const importedData = JSON.parse(text);
+                    
+                    // 验证数据格式
+                    if (!importedData.products || !Array.isArray(importedData.products)) {
+                        throw new Error('数据格式不正确');
+                    }
+                    
+                    // 同步商品数据到后端
+                    const response = await fetch(`${API_BASE_URL}/products/sync`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ products: importedData.products })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        await loadAllData();
+                        renderAdminProducts();
+                        renderProducts();
+                        showMessage('数据恢复成功！');
+                    } else {
+                        showMessage('数据恢复失败！', 'error');
+                    }
+                } catch (error) {
+                    console.error('导入数据错误：', error);
+                    showMessage('数据文件格式不正确', 'error');
+                }
+            };
+            
+            input.click();
+        }
+
+        // 初始化
+        renderProducts();
+        renderCustomerService();
+    </script>
+</body>
+</html>
