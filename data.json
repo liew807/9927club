@@ -2,8 +2,8 @@
   "users": [
     {
       "id": 1,
-      "username": "admin",
-      "password": "admin123",
+      "username": "liew",
+      "password": "liew123",
       "isAdmin": true,
       "createdAt": "2024-01-15T12:00:00.000Z"
     }
