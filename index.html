@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Yummy Diary</title>
+  <meta name="description" content="Yummy Diary - 精选零食、辣条、糖果、文创小物，让生活更有滋味。">
+  <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    body {
+      background: #fff;
+      color: #333;
+      line-height: 1.6;
+    }
+
+    /* Loader 动画 */
+    #loader {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 2000;
+      transition: opacity 0.6s ease, visibility 0.6s ease;
+    }
+    #loader.fade-out {
+      opacity: 0;
+      visibility: hidden;
+    }
+    #loader img {
+      width: 150px;
+      animation: wag 1.4s infinite ease-in-out;
+    }
+    @keyframes wag {
+      0%, 100% { transform: rotate(0deg); }
+      25% { transform: rotate(2deg); }
+      75% { transform: rotate(-2deg); }
+    }
+    #content {
+      opacity: 0;
+      transition: opacity 1s ease;
+    }
+    #content.show {
+      opacity: 1;
+    }
+
+    /* 头部导航 */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 15px 20px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+      background: #fff;
+    }
+    .logo img {
+      max-height: 45px;
+      width: auto;
+    }
+    nav a {
+      text-decoration: none;
+      color: #333;
+      margin: 0 10px;
+      font-size: 15px;
+    }
+    nav a:hover {
+      color: #000;
+      font-weight: bold;
+    }
+    .nav-right {
+      display: flex;
+      align-items: center;
+    }
+    .search-box {
+      position: relative;
+    }
+    .search-icon {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 18px;
+      height: 18px;
+      fill: #999;
+    }
+    .search-box input {
+      padding: 8px 8px 8px 30px;
+      border: 1px solid #ddd;
+      border-radius: 20px;
+      outline: none;
+    }
+    #suggestions {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: #fff;
+      border: 1px solid #ddd;
+      border-top: none;
+      max-height: 200px;
+      overflow-y: auto;
+      display: none;
+      z-index: 9999;
+      font-size: 14px;
+    }
+    #suggestions div {
+      padding: 8px 10px;
+      cursor: pointer;
+    }
+    #suggestions div:hover {
+      background: #f0f0f0;
+    }
+
+    /* 英雄区 */
+    .hero {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+      gap: 40px;
+      flex-wrap: wrap;
+    }
+    .hero-img img {
+      max-width: 300px;
+      width: 100%;
+      border-radius: 10px;
+    }
+    .hero-text {
+      text-align: center;
+    }
+    .hero-text h1 {
+      font-size: 2rem;
+      margin-bottom: 15px;
+    }
+    .hero-text p {
+      font-size: 1.1rem;
+      margin-bottom: 20px;
+      color: #666;
+    }
+    .btn {
+      background: #000;
+      color: #fff;
+      border: none;
+      padding: 12px 28px;
+      border-radius: 25px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .btn:hover {
+      background: #333;
+    }
+
+    /* 卡片展示区 */
+    .info-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+      margin: 40px auto;
+      max-width: 1000px;
+      padding: 0 15px;
+    }
+    .card {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+      padding: 20px;
+    }
+    .card.reverse {
+      flex-direction: row-reverse;
+    }
+    .card-img img {
+      max-width: 280px;
+      width: 100%;
+      border-radius: 10px;
+    }
+    .card-text {
+      flex: 1;
+    }
+    .card-text h3 {
+      margin: 0 0 10px;
+      font-size: 1.4rem;
+      color: #333;
+    }
+    .card-text p {
+      margin: 0 0 10px;
+      font-size: 1rem;
+      line-height: 1.6;
+      color: #555;
+      white-space: pre-line;
+    }
+    strong {
+      font-weight: 800;
+      color: #111;
+      text-shadow: 0.5px 0.5px #ccc;
+    }
+
+    /* 购物车按钮 */
+    .cart-fab {
+      position: fixed;
+      bottom: 70px;
+      right: 20px;
+      width: 75px;
+      height: 75px;
+      background: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+      cursor: pointer;
+      z-index: 1100;
+      overflow: hidden;
+      transition: transform 0.3s ease;
+    }
+    .cart-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .cart-img {
+      width: 70%;
+      height: 70%;
+      object-fit: contain;
+    }
+    .cart-badge {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: #000;
+      color: #fff;
+      font-size: 14px;
+      padding: 4px 7px;
+      border-radius: 50%;
+      font-weight: bold;
+      box-shadow: 0 0 4px rgba(0,0,0,0.3);
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 2000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.3);
+    }
+    .modal-card {
+      background: #fff;
+      width: 420px;
+      max-width: 95%;
+      padding: 20px;
+      border-radius: 20px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      animation: fadeIn 0.3s ease;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    @keyframes fadeIn {
+      from { transform: translate(-50%, -60%); opacity: 0; }
+      to { transform: translate(-50%, -50%); opacity: 1; }
+    }
+    .modal-card h2 {
+      text-align: center;
+      font-size: 18px;
+      margin-top: 0;
+      color: #444;
+    }
+    .close {
+      position: absolute;
+      right: 15px;
+      top: 15px;
+      font-size: 20px;
+      cursor: pointer;
+      color: #000;
+    }
+    .close:hover {
+      color: #555;
+    }
+    .cart-content {
+      margin: 15px 0;
+    }
+    .cart-footer {
+      text-align: center;
+      margin-top: 15px;
+      display: flex;
+      justify-content: space-around;
+    }
+    .cart-footer button {
+      background: transparent;
+      border: 2px solid #000;
+      padding: 10px 20px;
+      border-radius: 25px;
+      color: #000;
+      cursor: pointer;
+      font-weight: bold;
+      transition: 0.3s;
+    }
+    .cart-footer button:hover {
+      background: #000;
+      color: #fff;
+    }
+    #checkoutBtn {
+      background: #000 !important;
+      color: #fff !important;
+      border: none !important;
+      padding: 12px 28px;
+      border-radius: 999px;
+      font-weight: bold;
+      font-size: 15px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    #checkoutBtn:hover {
+      background: #333;
+    }
+    .site-footer {
+      text-align: center;
+      padding: 20px;
+      background: #f9f9f9;
+      margin-top: 40px;
+      color: #666;
+      font-size: 14px;
+    }
+
+    /* 手机端优化 */
+    @media (max-width: 768px) {
+      header {
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+      nav {
+        order: 3;
+        width: 100%;
+        text-align: center;
+      }
+      .hero {
+        flex-direction: column;
+        text-align: center;
+      }
+      .hero-text h1 {
+        font-size: 1.5rem;
+      }
+      .card, .card.reverse {
+        flex-direction: column;
+        text-align: center;
+      }
+      .card-img {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 15px;
+      }
+      .card-img img {
+        max-width: 150px;
+      }
+      .card-text h3 {
+        font-size: 1.2rem;
+        display: inline-block;
+        border-bottom: 2px solid #000;
+        padding-bottom: 3px;
+      }
+      .cart-fab {
+        bottom: 20px;
+        right: 15px;
+        width: 60px;
+        height: 60px;
+      }
+      .cart-badge {
+        top: 5px;
+        right: 5px;
+        font-size: 12px;
+        padding: 3px 6px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="loader">
+    <img src="https://i.ibb.co/mFPvYtPd/IMG-5797.png" alt="Loading...">
+  </div>
+
+  <div id="content">
+    <header>
+      <div class="logo">
+        <a href="index.html">
+          <img src="https://i.ibb.co/mFPvYtPdIMG-5797.png" alt="Yummy Diary Logo">
+        </a>
+      </div>
+
+      <nav>
+        <a href="index.html">首页 Home</a>
+        <a href="shop.html">商店 Shop</a>
+        <a href="contact.html">联系 Contact</a>
+        <a href="admin.html">管理后台</a>
+      </nav>
+
+      <div class="nav-right">
+        <form class="search-box" action="search.html" method="get" style="position:relative;">
+          <svg xmlns="http://www.w3.org/2000/svg" class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input type="text" id="searchBox" name="q" placeholder="Search Here..." required autocomplete="off">
+          <div id="suggestions" class="suggestions-box"></div>
+        </form>
+      </div>
+    </header>
+
+    <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const searchBox = document.getElementById("searchBox");
+      const suggestionsBox = document.getElementById("suggestions");
+
+      searchBox.addEventListener("keyup", () => {
+        const query = searchBox.value.trim();
+        if (query.length < 1) {
+          suggestionsBox.style.display = "none";
+          return;
+        }
+      });
+
+      document.addEventListener("click", (e) => {
+        if (!searchBox.contains(e.target) && !suggestionsBox.contains(e.target)) {
+          suggestionsBox.style.display = "none";
+        }
+      });
+    });
+    </script>
+
+    <section class="hero">
+      <div class="hero-img" data-aos="fade-right">
+        <img src="https://i.ibb.co/mFPvYtPd/IMG-5797.png" alt="Yummy Diary Dog">
+      </div>
+      <div class="hero-text" data-aos="fade-left">
+        <h1>
+          <strong>Welcome to <span>Yummy Diary</span></strong>
+        </h1>
+        <p>
+          一口零食，一件小物 <br>
+          陪你收集每一份小确幸
+        </p>
+        <button class="btn" onclick="location.href='shop.html'"><strong>进入商店 Shop Now</strong></button>
+      </div>
+    </section>
+
+    <section class="info-cards">
+      <div class="card" data-aos="fade-up">
+        <div class="card-img">
+          <img src="https://i.ibb.co/mFPvYtPd/IMG-5797.png" alt="零食小店">
+        </div>
+        <div class="card-text">
+            <strong>🚚 运费优惠（西马 🇲🇾）</strong>
+  <p>
+普通运费：RM7.50
+
+满 RM19.90
+👉 运费只需 RM5.90
+
+满 RM29.90
+👉 运费只需 RM3.50
+🎁 加送 1 包魔芋爽+小挂件
+
+满 RM39.90
+👉 运费只需 RM1.90
+🎁 加送 1 包魔芋爽+小挂件
+
+满 RM49.90
+👉 免运费 🎉
+🎁 加送 1 包魔芋爽 + 小挂件
+  </p>
+        </div>
+      </div>
+
+      <div class="card reverse" data-aos="fade-up" data-aos-delay="200">
+        <div class="card-img">
+          <img src="https://i.ibb.co/mFPvYtPd/IMG-5797.png" alt="超值优惠小猫">
+        </div>
+        <div class="card-text">
+          <strong> 欢迎光临—Yummydiary 零食小店</strong> 
+          <p>
+这里是属于你的美味小角落🍬
+
+我们希望每一位来到这里的人
+都能在忙碌的日常里, 找到属于自己的幸福小瞬间
+
+每一款精选零食, 
+都是我们用心挑选的小惊喜, 
+想带给你一份放松、多些快乐, 
+也为生活添上一点点仪式感与温暖
+
+喜欢的话, 记得关注我们的 IG
+<p>
+  喜欢的话，记得关注我们的 IG 
+  <a href="https://www.instagram.com/yummydiaryy_?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" target="_blank">
+    👉<strong>@yummydiaryy_</strong>
+          </a>
+          </p>
+        </div>
+      </div>
+
+      <div class="card" data-aos="fade-up" data-aos-delay="400">
+        <div class="card-img">
+          <img src="https://i.ibb.co/mFPvYtPd/IMG-5797.png" alt="运费大优惠">
+        </div>
+        <div class="card-text">
+          <strong> 📌 超值优惠来啦！</strong>
+          <p>
+<strong>🏷️超低价格</strong><br>
+我们坚持 <strong> 比热门店更低</strong> 的好价格！<br>
+让每一口美味都买得放心又划算<br><br>
+
+🚚 <strong> 运费宠粉</strong>
+
+原价 RM7.50 ➝ 现在只需 <b><strong>RM1.90 </strong></b><br>
+小提醒: 单笔满 <strong>Rm27.90</strong> 就能享受啦<br>
+
+🎁 <strong>暖心小礼物</strong><br>
+每一份订单 我们都会送 <strong>1-2份小礼物</strong><br>
+希望你拆包裹的那一刻
+能多一份惊喜, 也多一份被惦记的温暖
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <footer class="site-footer">
+      <p>© 2025 Yummy Diary | All Rights Reserved.</p>
+    </footer>
+
+    <div class="cart-fab" id="cartFab">
+      <div class="cart-inner">
+        <img src="https://i.ibb.co/mFPvYtPd/IMG-5797.png" alt="购物车" class="cart-img" width="52" height="52" loading="lazy">
+      </div>
+      <span class="cart-badge" style="display:none;">0</span>
+    </div>
+
+    <div id="cartModal" class="modal">
+      <div class="modal-card">
+        <span class="close">&times;</span>
+        <h2>🛍 我的购物袋</h2>
+        <div class="cart-content"></div>
+        <div class="cart-footer">
+          <button id="clearCartBtn">清空</button>
+          <button id="checkoutBtn"><strong>去结算</strong></button>
+        </div>
+      </div>
+    </div>
+
+    <script defer>
+    function getCartAndUpdate() {
+      return new Promise(resolve=>resolve({success:true,cart:[],count:0}));
+    }
+    function updateCartUI(data) {
+      const badge = document.querySelector(".cart-badge");
+      if (badge) {
+        badge.textContent = data.count ?? 0;
+        badge.style.display = (data.count ?? 0) > 0 ? "inline-block" : "none";
+      }
+      const cartContent = document.querySelector(".cart-content");
+      if(cartContent) cartContent.innerHTML = `<div class="cart-empty">购物车仅线上服务可用</div>`;
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const fab=document.getElementById("cartFab");
+      const modal=document.getElementById("cartModal");
+      const close=document.querySelector(".close");
+      if (fab) fab.onclick=()=>modal.style.display="block";
+      if (close) close.onclick=()=>modal.style.display="none";
+      window.onclick=e=>{ if(e.target===modal) modal.style.display="none"; };
+    });
+    </script>
+  </div>
+
+  <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+  <script>
+    AOS.init({ duration: 800, offset: 100, once: true });
+    window.addEventListener("load", () => {
+      const loader = document.getElementById("loader");
+      const content = document.getElementById("content");
+      setTimeout(() => {
+        loader.classList.add("fade-out");
+        setTimeout(() => {
+          loader.style.display = "none";
+          content.classList.add("show");
+        }, 600);
+      }, 3000);
+    });
+  </script>
+
+</body>
+</html>
