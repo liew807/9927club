@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shop | Yummy Diary</title>
+  <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    body {
+      background: #fff;
+      color: #333;
+      line-height: 1.6;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 15px 20px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+      background: #fff;
+    }
+    .logo img {
+      max-height: 45px;
+      width: auto;
+    }
+    nav a {
+      text-decoration: none;
+      color: #333;
+      margin: 0 10px;
+      font-size: 15px;
+    }
+    nav a.active {
+      font-weight: bold;
+      color: #000;
+      border-bottom: 2px solid #000;
+      padding-bottom: 2px;
+    }
+    .nav-right {
+      display: flex;
+      align-items: center;
+    }
+    .search-box {
+      position: relative;
+    }
+    .search-icon {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 18px;
+      height: 18px;
+      fill: #999;
+    }
+    .search-box input {
+      padding: 8px 8px 8px 30px;
+      border: 1px solid #ddd;
+      border-radius: 20px;
+      outline: none;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 40px auto;
+      padding: 0 15px;
+    }
+    .cate-wrap {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 30px;
+    }
+    .cate-item {
+      padding: 6px 16px;
+      border: 1px solid #000;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .cate-item.active {
+      background: #000;
+      color: #fff;
+    }
+    .goods-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 25px;
+    }
+    .goods-card {
+      border: 1px solid #eee;
+      border-radius: 12px;
+      overflow: hidden;
+      transition: 0.3s;
+    }
+    .goods-card:hover {
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    .goods-img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+    }
+    .goods-info {
+      padding: 12px;
+    }
+    .goods-name {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      word-break: break-all;
+    }
+    .goods-code {
+      font-size: 12px;
+      color: #999;
+      margin-bottom: 6px;
+    }
+    .goods-price {
+      font-size: 16px;
+      color: #e63946;
+      font-weight: bold;
+    }
+    .goods-stock {
+      font-size: 12px;
+      color: #666;
+      margin: 4px 0;
+    }
+    .add-cart-btn {
+      width: 100%;
+      background: #000;
+      color: #fff;
+      border: none;
+      padding: 8px 0;
+      margin-top: 8px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .empty-tip {
+      text-align: center;
+      padding: 80px 0;
+      color: #aaa;
+    }
+
+    /* 购物车悬浮按钮 */
+    .cart-fab {
+      position: fixed;
+      bottom: 70px;
+      right: 20px;
+      width: 75px;
+      height: 75px;
+      background: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+      cursor: pointer;
+      z-index: 1100;
+    }
+    .cart-img {
+      width: 70%;
+      height: 70%;
+      object-fit: contain;
+    }
+    .cart-badge {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: #000;
+      color: #fff;
+      font-size: 14px;
+      padding: 4px 7px;
+      border-radius: 50%;
+      display: none;
+    }
+
+    /* 通用弹窗 */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 2000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.3);
+    }
+    .modal-card {
+      background: #fff;
+      width: 420px;
+      max-width: 95%;
+      padding: 20px;
+      border-radius: 20px;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%,-50%);
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    /* 结算表格弹窗（大号） */
+    .checkout-modal .modal-card{
+      width: 650px;
+      max-width: 95%;
+    }
+    .close {
+      position: absolute;
+      right: 15px;
+      top: 15px;
+      font-size: 22px;
+      cursor: pointer;
+      color: #000;
+    }
+    /* 结算格子表格 */
+    table{
+      width:100%;
+      border-collapse:collapse;
+      margin:15px 0;
+    }
+    th,td{
+      border:1px solid #ccc;
+      padding:10px;
+      text-align:center;
+      font-size:14px;
+    }
+    th{
+      background:#f7f7f7;
+    }
+    .total-text{
+      font-size:16px;
+      margin:8px 0;
+      font-weight:bold;
+    }
+    .btn-black{
+      background:#000;
+      color:#fff;
+      border:none;
+      padding:8px 20px;
+      border-radius:6px;
+      cursor:pointer;
+      margin:5px;
+    }
+    .site-footer {
+      text-align: center;
+      padding: 20px;
+      background: #f9f9f9;
+      margin-top: 60px;
+      color: #666;
+      font-size: 14px;
+    }
+
+    @media (max-width:768px){
+      header { flex-wrap: wrap; gap:10px; }
+      nav { width:100%; text-align:center; order:3; }
+      .goods-list { grid-template-columns: repeat(2,1fr); }
+      .cart-fab { bottom:20px; right:15px; width:60px; height:60px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <a href="index.html">
+        <img src="https://i.ibb.co/mFPvYtPd/IMG-5797.png" alt="Logo">
+      </a>
+    </div>
+    <nav>
+      <a href="index.html">首页 Home</a>
+      <a href="shop.html" class="active">商店 Shop</a>
+      <a href="contact.html">联系 Contact</a>
+      <a href="admin.html">管理后台</a>
+    </nav>
+    <div class="nav-right">
+      <form class="search-box" action="search.html" method="get">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="text" placeholder="Search Here...">
+      </form>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="cate-wrap" id="cateWrap">
+      <div class="cate-item active" data-cate="all">全部商品</div>
+    </div>
+    <div class="goods-list" id="goodsList"></div>
+  </div>
+
+  <footer class="site-footer">
+    <p>© 2025 Yummy Diary | All Rights Reserved.</p>
+  </footer>
+
+  <!-- 购物车悬浮按钮 -->
+  <div class="cart-fab" id="openCartBtn">
+    <img src="https://i.ibb.co/mFPvYtPd/IMG-5797.png" class="cart-img">
+    <span class="cart-badge" id="cartNum">0</span>
+  </div>
+
+  <!-- 迷你购物车弹窗 -->
+  <div class="modal" id="cartModal">
+    <div class="modal-card">
+      <span class="close" id="closeCartBtn">&times;</span>
+      <h2 style="text-align:center;margin-bottom:15px;">🛍️ 我的购物袋</h2>
+      <div id="cartContent" style="min-height:120px;text-align:center;color:#999;">
+        购物车暂无商品
+      </div>
+      <div style="text-align:center;margin-top:20px;">
+        <button class="btn-black" id="toCheckout">结算清单</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 结算清单大表格弹窗（拍照专用） -->
+  <div class="modal checkout-modal" id="checkoutModal">
+    <div class="modal-card">
+      <span class="close" id="closeCheckout">&times;</span>
+      <h2 style="text-align:center;margin-bottom:10px;">📋 下单清单</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>商品名称</th>
+            <th>单价(RM)</th>
+            <th>数量</th>
+            <th>小计(RM)</th>
+          </tr>
+        </thead>
+        <tbody id="checkoutTable">
+        </tbody>
+      </table>
+      <div class="total-text">总商品件数：<span id="totalCount">0</span> 件</div>
+      <div class="total-text">合计总金额：RM <span id="totalMoney">0.00</span></div>
+      <div style="text-align:center;margin-top:15px;">
+        <button class="btn-black" id="closeCheckoutBtn">关闭（可直接截图）</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = "http://localhost:3000/api";
+    let allGoods = [];
+    let allCate = [];
+    let cart = [];
+
+    // 购物车弹窗
+    const openCartBtn = document.getElementById('openCartBtn');
+    const closeCartBtn = document.getElementById('closeCartBtn');
+    const cartModal = document.getElementById('cartModal');
+    // 结算弹窗
+    const checkoutModal = document.getElementById('checkoutModal');
+    const closeCheckout = document.getElementById('closeCheckout');
+    const closeCheckoutBtn = document.getElementById('closeCheckoutBtn');
+    const toCheckoutBtn = document.getElementById('toCheckout');
+
+    // 打开购物车
+    openCartBtn.onclick = function(){
+      cartModal.style.display = "block";
+    }
+    // 关闭购物车
+    closeCartBtn.onclick = function(){
+      cartModal.style.display = "none";
+    }
+    // 打开结算清单表格
+    toCheckoutBtn.onclick = function(){
+      if(cart.length <= 0){
+        alert("请先添加商品！");
+        return;
+      }
+      renderCheckoutList();
+      cartModal.style.display = "none";
+      checkoutModal.style.display = "block";
+    }
+    // 关闭结算清单
+    closeCheckout.onclick = closeCheckoutBtn.onclick = function(){
+      checkoutModal.style.display = "none";
+    }
+
+    // 点击空白关闭
+    window.onclick = function(e){
+      if(e.target === cartModal) cartModal.style.display = "none";
+      if(e.target === checkoutModal) checkoutModal.style.display = "none";
+    }
+
+    // 页面加载
+    window.onload = async function(){
+      await getCate();
+      await getGoods();
+    }
+
+    // 获取分类
+    async function getCate(){
+      let res = await fetch(API_BASE + "/category");
+      allCate = await res.json();
+      let html = '<div class="cate-item active" data-cate="all">全部商品</div>';
+      allCate.forEach(item=>{
+        html += `<div class="cate-item" data-cate="${item.id}">${item.name}</div>`;
+      })
+      document.getElementById("cateWrap").innerHTML = html;
+      document.querySelectorAll(".cate-item").forEach(el=>{
+        el.onclick = function(){
+          document.querySelectorAll(".cate-item").forEach(x=>x.classList.remove("active"));
+          this.classList.add("active");
+          filterGoods(this.dataset.cate);
+        }
+      })
+    }
+
+    // 获取商品
+    async function getGoods(){
+      let res = await fetch(API_BASE + "/goods");
+      allGoods = await res.json();
+      renderGoods(allGoods);
+    }
+
+    // 筛选
+    function filterGoods(cateId){
+      let list = cateId==="all" ? allGoods : allGoods.filter(x=>x.cateId===cateId);
+      renderGoods(list);
+    }
+
+    // 渲染商品
+    function renderGoods(list){
+      let box = document.getElementById("goodsList");
+      if(list.length === 0){
+        box.innerHTML = '<div class="empty-tip">暂无商品</div>';
+        return;
+      }
+      let html = "";
+      list.forEach(item=>{
+        html += `
+        <div class="goods-card">
+          <img src="${item.img}" class="goods-img">
+          <div class="goods-info">
+            <div class="goods-name">${item.name}</div>
+            <div class="goods-code">编号：${item.code}</div>
+            <div class="goods-price">RM ${item.price}</div>
+            <div class="goods-stock">库存：${item.stock}</div>
+            <button class="add-cart-btn" data-name="${item.name}" data-price="${item.price}">加入购物车</button>
+          </div>
+        </div>
+        `;
+      })
+      box.innerHTML = html;
+
+      // 加入购物车
+      document.querySelectorAll('.add-cart-btn').forEach(btn=>{
+        btn.onclick = function(){
+          let name = this.dataset.name;
+          let price = parseFloat(this.dataset.price);
+          cart.push({name,price,qty:1});
+          updateCart();
+        }
+      })
+    }
+
+    // 更新迷你购物车
+    function updateCart(){
+      let num = document.getElementById('cartNum');
+      let content = document.getElementById('cartContent');
+      if(cart.length > 0){
+        num.style.display = "block";
+        num.innerText = cart.length;
+        let h = "";
+        cart.forEach((item)=>{
+          h += `<div style="padding:6px 0;border-bottom:1px solid #eee;">${item.name} — RM ${item.price}</div>`;
+        })
+        content.innerHTML = h;
+      }else{
+        num.style.display = "none";
+        content.innerHTML = "购物车暂无商品";
+      }
+    }
+
+    // 渲染结算清单【格子表格 拍照专用】
+    function renderCheckoutList(){
+      let table = document.getElementById("checkoutTable");
+      let totalCount = document.getElementById("totalCount");
+      let totalMoney = document.getElementById("totalMoney");
+      table.innerHTML = "";
+      let count = 0;
+      let money = 0;
+
+      cart.forEach(item=>{
+        let xiaoJi = item.price * item.qty;
+        count += item.qty;
+        money += xiaoJi;
+        table.innerHTML += `
+          <tr>
+            <td>${item.name}</td>
+            <td>${item.price.toFixed(2)}</td>
+            <td>${item.qty}</td>
+            <td>${xiaoJi.toFixed(2)}</td>
+          </tr>
+        `;
+      })
+
+      totalCount.innerText = count;
+      totalMoney.innerText = money.toFixed(2);
+    }
+  </script>
+  <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+  <script>AOS.init();</script>
+</body>
+</html>
