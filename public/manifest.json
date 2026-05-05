@@ -1,0 +1,20 @@
+{
+    "name": "QQ",
+    "short_name": "QQ",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#12b7f5",
+    "theme_color": "#12b7f5",
+    "icons": [
+        {
+            "src": "https://i.ibb.co/gZgwpYqQ/IMG-5869.jpg",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "https://i.ibb.co/gZgwpYqQ/IMG-5869.jpg",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}
