@@ -1,0 +1,2548 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>FOOD MY点餐系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- 使用更稳定的 CDN 地址 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js">
+    </script>
+    <style>
+        /* ----- 全局重置 ----- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            background: #f2f2f6;
+            overflow: hidden;
+        }
+
+        /* ===== 加载动画 ===== */
+        #loadingScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #ffffff;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.8s ease, visibility 0.8s ease;
+        }
+        #loadingScreen.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+        /* 立体Logo容器 */
+        .logo-3d-container {
+            width: 120px;
+            height: 120px;
+            perspective: 800px;
+            margin-bottom: 30px;
+        }
+        .logo-3d {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            animation: logoRotate 6s ease-in-out infinite;
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(255, 122, 0, 0.3), 0 0 0 2px rgba(255, 122, 0, 0.1);
+        }
+        .logo-3d img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 24px;
+            display: block;
+        }
+        /* 立体边框光效 */
+        .logo-3d::before {
+            content: '';
+            position: absolute;
+            top: -4px;
+            left: -4px;
+            right: -4px;
+            bottom: -4px;
+            border-radius: 28px;
+            background: linear-gradient(135deg, #ff7a00, #ffb340, #ff7a00);
+            z-index: -1;
+            animation: borderGlow 3s ease-in-out infinite;
+        }
+        .logo-3d::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 24px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.3) 0%, transparent 50%, rgba(0, 0, 0, 0.1) 100%);
+            pointer-events: none;
+        }
+        @keyframes logoRotate {
+            0%,
+            100% {
+                transform: rotateY(0deg) rotateX(0deg) scale(1);
+            }
+            25% {
+                transform: rotateY(10deg) rotateX(-5deg) scale(1.02);
+            }
+            50% {
+                transform: rotateY(-10deg) rotateX(5deg) scale(1);
+            }
+            75% {
+                transform: rotateY(5deg) rotateX(-3deg) scale(1.02);
+            }
+        }
+        @keyframes borderGlow {
+            0%,
+            100% {
+                opacity: 0.6;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.02);
+            }
+        }
+
+        /* 加载文字 */
+        .loading-text {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1c1c1e;
+            margin-bottom: 16px;
+            letter-spacing: 2px;
+        }
+        .loading-text span {
+            color: #ff7a00;
+        }
+
+        /* 加载进度条 */
+        .progress-bar-container {
+            width: 200px;
+            height: 4px;
+            background: #f0f0f3;
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #ff7a00, #ffb340);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+        .progress-percent {
+            font-size: 13px;
+            color: #8e8e93;
+            margin-top: 8px;
+            font-weight: 500;
+        }
+
+        /* ===== 主应用 ===== */
+        .app {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100vw;
+            background: #ffffff;
+            position: relative;
+            opacity: 0;
+            transition: opacity 0.6s ease;
+        }
+        .app.ready {
+            opacity: 1;
+        }
+
+        /* ----- 头部 ----- */
+        .header {
+            background: #ffffff;
+            padding: 12px 20px 10px 20px;
+            border-bottom: 1px solid #f0f0f3;
+            flex-shrink: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            min-height: 60px;
+        }
+        .resto-name {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1c1c1e;
+        }
+        .resto-name small {
+            font-size: 13px;
+            font-weight: 400;
+            color: #8e8e93;
+            margin-left: 6px;
+        }
+        .resto-name .admin-badge {
+            display: none;
+            background: #34c759;
+            color: white;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 2px 12px;
+            border-radius: 30px;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+        .resto-name .admin-badge.show {
+            display: inline-block;
+        }
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #1c1c1e;
+        }
+        .header-actions i {
+            font-size: 20px;
+            opacity: 0.7;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .header-actions i:hover {
+            opacity: 1;
+        }
+        .login-entry-btn {
+            background: #ff7a00;
+            color: white;
+            border: none;
+            padding: 6px 16px;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 2px 8px rgba(255, 122, 0, 0.3);
+            white-space: nowrap;
+        }
+        .login-entry-btn:hover {
+            transform: scale(1.05);
+            background: #e56e00;
+        }
+        .login-entry-btn.logged-in {
+            background: #34c759;
+            box-shadow: 0 2px 8px rgba(52, 199, 89, 0.3);
+        }
+        .login-entry-btn.logged-in:hover {
+            background: #2db84e;
+        }
+
+        /* 优惠条 */
+        .delivery-bar {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 6px 20px 10px 20px;
+            background: white;
+            border-bottom: 1px solid #f0f0f3;
+            flex-wrap: wrap;
+            flex-shrink: 0;
+            min-height: 44px;
+        }
+        .delivery-tag {
+            background: #f2f2f7;
+            border-radius: 30px;
+            padding: 4px 14px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #1c1c1e;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .delivery-tag i {
+            color: #ff7a00;
+        }
+
+        /* 分类导航 */
+        .category-nav {
+            display: flex;
+            gap: 18px;
+            padding: 10px 20px;
+            background: white;
+            border-bottom: 1px solid #f0f0f3;
+            overflow-x: auto;
+            white-space: nowrap;
+            scrollbar-width: none;
+            -webkit-overflow-scrolling: touch;
+            flex-shrink: 0;
+            min-height: 48px;
+        }
+        .category-nav::-webkit-scrollbar {
+            display: none;
+        }
+        .category-item {
+            font-size: 15px;
+            font-weight: 500;
+            color: #6c6c70;
+            padding-bottom: 6px;
+            border-bottom: 3px solid transparent;
+            transition: 0.2s;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .category-item.active {
+            color: #1c1c1e;
+            border-bottom: 3px solid #ff7a00;
+        }
+        .category-item .del-cat {
+            color: #ff3b30;
+            font-size: 12px;
+            margin-left: 4px;
+            opacity: 0.5;
+            cursor: pointer;
+        }
+        .category-item .del-cat:hover {
+            opacity: 1;
+        }
+
+        /* ===== 主内容 ===== */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .menu-list {
+            flex: 1;
+            padding: 12px 16px 10px 16px;
+            background: #ffffff;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            overflow-y: auto;
+            min-height: 0;
+        }
+        .menu-list::-webkit-scrollbar {
+            width: 5px;
+        }
+        .menu-list::-webkit-scrollbar-thumb {
+            background: #d1d1d6;
+            border-radius: 20px;
+        }
+
+        /* 菜品卡片 */
+        .menu-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 8px 8px 8px 16px;
+            border: 1px solid #f0f0f3;
+            transition: 0.2s;
+            position: relative;
+            flex-shrink: 0;
+            cursor: pointer;
+        }
+        .menu-item:hover {
+            background: #f8f8fc;
+            border-color: #ff7a00;
+            transform: scale(1.01);
+        }
+        .menu-item:active {
+            transform: scale(0.98);
+        }
+        .menu-item.sold-out {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        .menu-item.sold-out::after {
+            content: '售罄';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-15deg);
+            font-size: 28px;
+            font-weight: 900;
+            color: #ff3b30;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 4px 20px;
+            border-radius: 12px;
+            border: 3px solid #ff3b30;
+            z-index: 5;
+            letter-spacing: 4px;
+        }
+        .menu-item .item-img {
+            width: 68px;
+            height: 68px;
+            border-radius: 16px;
+            flex-shrink: 0;
+            background-size: cover;
+            background-position: center;
+            background-color: #f2f2f7;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            color: #8e8e93;
+        }
+        .item-img i {
+            opacity: 0.5;
+        }
+        .item-details {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            flex: 1;
+            min-width: 0;
+            padding: 0 12px;
+        }
+        .item-name {
+            font-size: 17px;
+            font-weight: 600;
+            color: #1c1c1e;
+        }
+        .item-desc {
+            font-size: 12px;
+            color: #8e8e93;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .item-desc i {
+            color: #ffb340;
+        }
+        .item-price {
+            font-weight: 700;
+            font-size: 16px;
+            color: #1c1c1e;
+            margin-top: 2px;
+        }
+        .item-price small {
+            font-weight: 400;
+            font-size: 12px;
+            color: #8e8e93;
+            margin-left: 6px;
+            text-decoration: line-through;
+        }
+        .item-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+            pointer-events: none;
+        }
+        .qty-control {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: #f7f7f9;
+            padding: 2px 5px;
+            border-radius: 30px;
+            pointer-events: auto;
+        }
+        .qty-btn {
+            background: white;
+            border: none;
+            border-radius: 30px;
+            width: 28px;
+            height: 28px;
+            font-size: 16px;
+            font-weight: 600;
+            color: #1c1c1e;
+            cursor: pointer;
+            transition: 0.1s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #e5e5ea;
+        }
+        .qty-btn:active {
+            background: #e5e5ea;
+            transform: scale(0.92);
+        }
+        .qty-number {
+            min-width: 20px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 16px;
+            color: #1c1c1e;
+        }
+
+        /* 商家管理按钮 */
+        .admin-item-actions {
+            display: none;
+            gap: 6px;
+            margin-left: 8px;
+            pointer-events: auto;
+        }
+        .admin-item-actions.show {
+            display: flex;
+        }
+        .admin-item-actions button {
+            background: transparent;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            padding: 4px 6px;
+            border-radius: 30px;
+            transition: 0.2s;
+        }
+        .admin-item-actions .btn-soldout {
+            color: #ff9500;
+        }
+        .admin-item-actions .btn-soldout:hover {
+            background: #fff5e6;
+        }
+        .admin-item-actions .btn-delete {
+            color: #ff3b30;
+        }
+        .admin-item-actions .btn-delete:hover {
+            background: #ffe6e5;
+        }
+
+        /* ===== 底部购物车 ===== */
+        .cart-bar {
+            background: white;
+            border-top: 2px solid #f0f0f3;
+            padding: 12px 20px 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+            flex-wrap: wrap;
+            gap: 8px;
+            min-height: 76px;
+            width: 100%;
+            position: relative;
+            z-index: 10;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.04);
+        }
+        .cart-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            cursor: pointer;
+        }
+        .cart-left:hover .cart-icon {
+            transform: scale(1.05);
+        }
+        .cart-icon {
+            background: #1c1c1e;
+            border-radius: 40px;
+            padding: 8px 14px;
+            color: white;
+            font-size: 17px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+            transition: 0.2s;
+        }
+        .cart-icon span {
+            font-size: 14px;
+            font-weight: 600;
+            background: #ff7a00;
+            padding: 0 10px;
+            border-radius: 30px;
+            line-height: 20px;
+        }
+        .cart-total {
+            font-weight: 700;
+            font-size: 18px;
+            color: #1c1c1e;
+            min-width: 70px;
+        }
+        .cart-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .checkout-btn {
+            background: #ff7a00;
+            border: none;
+            color: white;
+            padding: 10px 24px;
+            border-radius: 40px;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: 0 4px 12px rgba(255, 122, 0, 0.25);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+        .checkout-btn:active {
+            transform: scale(0.95);
+            background: #e56e00;
+        }
+        .manage-btn {
+            background: transparent;
+            border: 1px solid #d1d1d6;
+            padding: 8px 14px;
+            border-radius: 40px;
+            font-weight: 600;
+            color: #1c1c1e;
+            cursor: pointer;
+            transition: 0.2s;
+            display: none;
+            align-items: center;
+            gap: 5px;
+            font-size: 13px;
+            white-space: nowrap;
+        }
+        .manage-btn:active {
+            background: #f2f2f7;
+        }
+
+        /* ===== 购物车详情弹窗 ===== */
+        .cart-detail-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(8px);
+            z-index: 3000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .cart-detail-overlay.active {
+            display: flex;
+        }
+        .cart-detail-box {
+            background: white;
+            border-radius: 32px;
+            padding: 28px 24px 24px;
+            max-width: 440px;
+            width: 100%;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 32px 64px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+        .cart-detail-box::-webkit-scrollbar {
+            width: 4px;
+        }
+        .cart-detail-box::-webkit-scrollbar-thumb {
+            background: #d1d1d6;
+            border-radius: 20px;
+        }
+        .cart-detail-close {
+            position: absolute;
+            top: 16px;
+            right: 20px;
+            font-size: 24px;
+            color: #8e8e93;
+            cursor: pointer;
+            transition: 0.2s;
+            background: none;
+            border: none;
+        }
+        .cart-detail-close:hover {
+            color: #1c1c1e;
+            transform: rotate(90deg);
+        }
+        .cart-detail-box h3 {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .cart-detail-box .cart-empty-msg {
+            color: #8e8e93;
+            text-align: center;
+            padding: 30px 0;
+            font-size: 16px;
+        }
+        .cart-detail-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #f5f5f8;
+        }
+        .cart-detail-item:last-child {
+            border-bottom: none;
+        }
+        .cart-detail-item .cd-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .cart-detail-item .cd-name {
+            font-weight: 600;
+            font-size: 16px;
+            color: #1c1c1e;
+        }
+        .cart-detail-item .cd-addons {
+            font-size: 13px;
+            color: #8e8e93;
+        }
+        .cart-detail-item .cd-price {
+            font-weight: 600;
+            font-size: 15px;
+            color: #1c1c1e;
+            margin-right: 12px;
+            white-space: nowrap;
+        }
+        .cart-detail-item .cd-remove {
+            background: none;
+            border: none;
+            color: #ff3b30;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 30px;
+            transition: 0.2s;
+        }
+        .cart-detail-item .cd-remove:hover {
+            background: #ffe6e5;
+        }
+        .cart-detail-total {
+            display: flex;
+            justify-content: space-between;
+            padding-top: 16px;
+            margin-top: 12px;
+            border-top: 2px solid #f0f0f3;
+            font-weight: 700;
+            font-size: 18px;
+        }
+        .cart-detail-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+        .cart-detail-actions button {
+            flex: 1;
+            padding: 14px;
+            border-radius: 40px;
+            font-weight: 700;
+            font-size: 16px;
+            border: none;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .cart-detail-actions .btn-close-cart {
+            background: #f2f2f7;
+            color: #1c1c1e;
+        }
+        .cart-detail-actions .btn-close-cart:active {
+            background: #e5e5ea;
+        }
+        .cart-detail-actions .btn-clear-cart {
+            background: #ff3b30;
+            color: white;
+        }
+        .cart-detail-actions .btn-clear-cart:active {
+            transform: scale(0.97);
+            background: #e0352b;
+        }
+
+        /* ===== 商品详情弹窗 ===== */
+        .detail-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(8px);
+            z-index: 3000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .detail-overlay.active {
+            display: flex;
+        }
+        .detail-box {
+            background: white;
+            border-radius: 32px;
+            padding: 28px 24px 24px;
+            max-width: 440px;
+            width: 100%;
+            max-height: 92vh;
+            overflow-y: auto;
+            box-shadow: 0 32px 64px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+        .detail-box::-webkit-scrollbar {
+            width: 4px;
+        }
+        .detail-box::-webkit-scrollbar-thumb {
+            background: #d1d1d6;
+            border-radius: 20px;
+        }
+        .detail-close {
+            position: absolute;
+            top: 16px;
+            right: 20px;
+            font-size: 24px;
+            color: #8e8e93;
+            cursor: pointer;
+            transition: 0.2s;
+            background: none;
+            border: none;
+        }
+        .detail-close:hover {
+            color: #1c1c1e;
+            transform: rotate(90deg);
+        }
+        .detail-box .detail-img {
+            width: 100%;
+            height: 180px;
+            border-radius: 20px;
+            background-size: cover;
+            background-position: center;
+            background-color: #f2f2f7;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+            color: #8e8e93;
+            margin-bottom: 16px;
+        }
+        .detail-box .detail-name {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1c1c1e;
+        }
+        .detail-box .detail-price {
+            font-size: 20px;
+            font-weight: 700;
+            color: #ff7a00;
+            margin-top: 4px;
+        }
+        .detail-box .detail-price small {
+            font-weight: 400;
+            font-size: 15px;
+            color: #8e8e93;
+            margin-left: 8px;
+            text-decoration: line-through;
+        }
+        .detail-box .detail-note {
+            color: #8e8e93;
+            font-size: 14px;
+            margin-top: 8px;
+            padding: 10px 14px;
+            background: #f8f8fc;
+            border-radius: 12px;
+        }
+        .detail-box .detail-note i {
+            margin-right: 6px;
+            color: #ff7a00;
+        }
+        .addon-section {
+            margin-top: 18px;
+            border-top: 1px solid #f0f0f3;
+            padding-top: 16px;
+        }
+        .addon-section .addon-title {
+            font-weight: 600;
+            font-size: 16px;
+            color: #1c1c1e;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .addon-section .addon-title i {
+            color: #ff7a00;
+        }
+        .addon-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #f5f5f8;
+        }
+        .addon-item:last-child {
+            border-bottom: none;
+        }
+        .addon-item .addon-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .addon-item .addon-name {
+            font-size: 15px;
+            font-weight: 500;
+            color: #1c1c1e;
+        }
+        .addon-item .addon-price {
+            font-size: 13px;
+            color: #8e8e93;
+        }
+        .addon-item .addon-qty {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .addon-item .addon-qty button {
+            width: 28px;
+            height: 28px;
+            border-radius: 30px;
+            border: 1px solid #e5e5ea;
+            background: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.1s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .addon-item .addon-qty button:active {
+            background: #e5e5ea;
+            transform: scale(0.92);
+        }
+        .addon-item .addon-qty span {
+            min-width: 20px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 16px;
+        }
+        .detail-remark {
+            margin-top: 16px;
+        }
+        .detail-remark label {
+            font-weight: 600;
+            font-size: 14px;
+            color: #1c1c1e;
+            display: block;
+            margin-bottom: 4px;
+        }
+        .detail-remark textarea {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid #e5e5ea;
+            border-radius: 14px;
+            font-size: 15px;
+            background: #fafafc;
+            outline: none;
+            resize: vertical;
+            min-height: 50px;
+            font-family: inherit;
+        }
+        .detail-remark textarea:focus {
+            border-color: #ff7a00;
+            background: white;
+        }
+        .detail-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+        .detail-actions button {
+            flex: 1;
+            padding: 14px;
+            border-radius: 40px;
+            font-weight: 700;
+            font-size: 16px;
+            border: none;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .detail-actions .btn-cancel-detail {
+            background: #f2f2f7;
+            color: #1c1c1e;
+        }
+        .detail-actions .btn-cancel-detail:active {
+            background: #e5e5ea;
+        }
+        .detail-actions .btn-add-cart {
+            background: #ff7a00;
+            color: white;
+            box-shadow: 0 4px 12px rgba(255, 122, 0, 0.25);
+        }
+        .detail-actions .btn-add-cart:active {
+            transform: scale(0.97);
+            background: #e56e00;
+        }
+
+        /* ===== 登录弹窗 ===== */
+        .login-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(6px);
+            z-index: 999;
+            justify-content: center;
+            align-items: center;
+        }
+        .login-overlay.active {
+            display: flex;
+        }
+        .login-box {
+            background: white;
+            border-radius: 28px;
+            padding: 32px 28px 28px;
+            width: 92%;
+            max-width: 380px;
+            box-shadow: 0 24px 48px rgba(0, 0, 0, 0.25);
+        }
+        .login-box h2 {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .login-box .sub {
+            color: #8e8e93;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        .login-box input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1px solid #e5e5ea;
+            border-radius: 14px;
+            font-size: 16px;
+            margin-bottom: 14px;
+            background: #fafafc;
+            outline: none;
+        }
+        .login-box input:focus {
+            border-color: #ff7a00;
+            background: white;
+        }
+        .login-box .btn-login {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 40px;
+            background: #ff7a00;
+            color: white;
+            font-weight: 700;
+            font-size: 17px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(255, 122, 0, 0.25);
+            transition: 0.2s;
+        }
+        .login-box .btn-login:active {
+            transform: scale(0.97);
+        }
+        .login-box .login-error {
+            color: #ff3b30;
+            font-size: 13px;
+            margin-top: -8px;
+            margin-bottom: 12px;
+            display: none;
+        }
+        .login-box .login-hint {
+            text-align: center;
+            margin-top: 14px;
+            font-size: 13px;
+            color: #8e8e93;
+            border-top: 1px solid #f0f0f3;
+            padding-top: 14px;
+        }
+        .login-box .login-hint code {
+            background: #f2f2f7;
+            padding: 2px 12px;
+            border-radius: 6px;
+            font-weight: 600;
+            color: #1c1c1e;
+        }
+
+        /* ===== 管理弹窗 ===== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(6px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+        .modal-box {
+            background: white;
+            border-radius: 28px;
+            padding: 28px 24px 24px;
+            width: 92%;
+            max-width: 420px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 24px 48px rgba(0, 0, 0, 0.25);
+        }
+        .modal-box h2 {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .modal-box .sub {
+            color: #8e8e93;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        .modal-box label {
+            font-weight: 600;
+            font-size: 14px;
+            color: #1c1c1e;
+            display: block;
+            margin-top: 14px;
+            margin-bottom: 4px;
+        }
+        .modal-box input,
+        .modal-box textarea,
+        .modal-box select {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid #e5e5ea;
+            border-radius: 14px;
+            font-size: 15px;
+            background: #fafafc;
+            outline: none;
+        }
+        .modal-box input:focus,
+        .modal-box textarea:focus {
+            border-color: #ff7a00;
+            background: white;
+        }
+        .modal-box textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+        .modal-actions button {
+            flex: 1;
+            padding: 14px;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 16px;
+            border: none;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .modal-actions .btn-cancel {
+            background: #f2f2f7;
+            color: #1c1c1e;
+        }
+        .modal-actions .btn-add {
+            background: #ff7a00;
+            color: white;
+            box-shadow: 0 4px 12px rgba(255, 122, 0, 0.25);
+        }
+        .modal-actions .btn-add:active {
+            background: #e56e00;
+            transform: scale(0.97);
+        }
+        .image-preview {
+            width: 100%;
+            height: 100px;
+            background: #f2f2f7;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #8e8e93;
+            font-size: 14px;
+            margin-top: 4px;
+            border: 1px dashed #d1d1d6;
+            overflow: hidden;
+        }
+        .image-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .addon-manage {
+            margin-top: 12px;
+            padding: 12px;
+            background: #f8f8fc;
+            border-radius: 16px;
+        }
+        .addon-manage .addon-manage-title {
+            font-weight: 600;
+            font-size: 14px;
+            color: #1c1c1e;
+            margin-bottom: 8px;
+        }
+        .addon-manage .addon-manage-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        .addon-manage .addon-manage-row input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #e5e5ea;
+            border-radius: 10px;
+            font-size: 14px;
+            background: white;
+            outline: none;
+        }
+        .addon-manage .addon-manage-row input:focus {
+            border-color: #ff7a00;
+        }
+        .addon-manage .addon-manage-row button {
+            padding: 8px 16px;
+            background: #ff7a00;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            white-space: nowrap;
+        }
+        .addon-manage .addon-manage-row button:active {
+            transform: scale(0.95);
+        }
+        .addon-manage .addon-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 6px;
+        }
+        .addon-manage .addon-tag {
+            background: white;
+            padding: 4px 12px 4px 14px;
+            border-radius: 30px;
+            border: 1px solid #e5e5ea;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .addon-manage .addon-tag .del-addon {
+            color: #ff3b30;
+            cursor: pointer;
+            font-size: 14px;
+            opacity: 0.5;
+        }
+        .addon-manage .addon-tag .del-addon:hover {
+            opacity: 1;
+        }
+
+        /* ===== 二维码 ===== */
+        .qr-float {
+            position: fixed;
+            bottom: 100px;
+            right: 16px;
+            background: white;
+            border-radius: 16px;
+            padding: 10px 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+            border: 1px solid #f0f0f3;
+            z-index: 50;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .qr-float:hover {
+            transform: scale(1.05);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+        }
+        .qr-float .qr-icon {
+            font-size: 32px;
+            color: #1c1c1e;
+        }
+        .qr-float .qr-label {
+            font-size: 10px;
+            color: #8e8e93;
+            font-weight: 500;
+        }
+        .qr-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+        .qr-modal-overlay.active {
+            display: flex;
+        }
+        .qr-modal-box {
+            background: white;
+            border-radius: 32px;
+            padding: 32px 28px 28px;
+            max-width: 400px;
+            width: 92%;
+            text-align: center;
+            box-shadow: 0 32px 64px rgba(0, 0, 0, 0.3);
+        }
+        .qr-modal-box h3 {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .qr-modal-box .qr-sub {
+            color: #8e8e93;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        .qr-modal-box #qrcode {
+            display: flex;
+            justify-content: center;
+            margin: 12px 0 20px;
+            min-height: 200px;
+            align-items: center;
+        }
+        .qr-modal-box .qr-close-btn {
+            background: #f2f2f7;
+            border: none;
+            padding: 12px 32px;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .qr-modal-box .qr-close-btn:active {
+            background: #e5e5ea;
+        }
+
+        /* ===== 响应式 ===== */
+        @media (max-width: 480px) {
+            .header {
+                padding: 10px 14px;
+            }
+            .resto-name {
+                font-size: 18px;
+            }
+            .resto-name small {
+                font-size: 12px;
+            }
+            .login-entry-btn {
+                font-size: 11px;
+                padding: 4px 12px;
+            }
+            .category-nav {
+                gap: 12px;
+                padding: 8px 14px;
+            }
+            .category-item {
+                font-size: 14px;
+            }
+            .menu-list {
+                padding: 10px 10px 8px;
+                gap: 12px;
+            }
+            .item-img {
+                width: 56px;
+                height: 56px;
+                font-size: 20px;
+            }
+            .item-name {
+                font-size: 15px;
+            }
+            .qty-btn {
+                width: 24px;
+                height: 24px;
+                font-size: 14px;
+            }
+            .cart-bar {
+                padding: 10px 14px 14px 14px;
+                min-height: 64px;
+            }
+            .cart-icon {
+                padding: 6px 12px;
+                font-size: 15px;
+            }
+            .cart-icon span {
+                font-size: 12px;
+                line-height: 18px;
+                padding: 0 8px;
+            }
+            .cart-total {
+                font-size: 16px;
+                min-width: 60px;
+            }
+            .checkout-btn {
+                padding: 8px 16px;
+                font-size: 13px;
+            }
+            .manage-btn {
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+            .modal-box {
+                padding: 20px 16px;
+            }
+            .qr-float {
+                bottom: 82px;
+                right: 10px;
+                padding: 8px 10px;
+            }
+            .qr-float .qr-icon {
+                font-size: 26px;
+            }
+            .qr-float .qr-label {
+                font-size: 9px;
+            }
+            .detail-box,
+            .cart-detail-box {
+                padding: 20px 16px;
+            }
+            .detail-box .detail-img {
+                height: 140px;
+                font-size: 40px;
+            }
+            .detail-box .detail-name {
+                font-size: 20px;
+            }
+            .logo-3d-container {
+                width: 90px;
+                height: 90px;
+            }
+        }
+        @media (max-width: 400px) {
+            .cart-left {
+                gap: 8px;
+            }
+            .cart-total {
+                font-size: 14px;
+                min-width: 50px;
+            }
+            .checkout-btn {
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+            .checkout-btn i {
+                display: none;
+            }
+        }
+        @media (max-height: 650px) {
+            .delivery-bar {
+                padding: 4px 16px 6px 16px;
+                min-height: 34px;
+            }
+            .delivery-tag {
+                font-size: 11px;
+                padding: 2px 10px;
+            }
+            .category-nav {
+                padding: 6px 16px;
+                min-height: 38px;
+            }
+            .category-item {
+                font-size: 13px;
+            }
+            .menu-list {
+                padding: 8px 12px 6px 12px;
+                gap: 10px;
+            }
+            .menu-item {
+                padding: 6px 6px 6px 12px;
+            }
+            .item-img {
+                width: 48px;
+                height: 48px;
+                font-size: 18px;
+            }
+            .item-name {
+                font-size: 14px;
+            }
+            .item-price {
+                font-size: 14px;
+            }
+            .cart-bar {
+                padding: 8px 14px 10px 14px;
+                min-height: 54px;
+            }
+            .cart-icon {
+                padding: 4px 10px;
+                font-size: 13px;
+            }
+            .cart-icon span {
+                font-size: 11px;
+                line-height: 16px;
+                padding: 0 6px;
+            }
+            .cart-total {
+                font-size: 14px;
+                min-width: 50px;
+            }
+            .checkout-btn {
+                padding: 6px 14px;
+                font-size: 12px;
+            }
+            .logo-3d-container {
+                width: 70px;
+                height: 70px;
+            }
+            .loading-text {
+                font-size: 15px;
+            }
+            .progress-bar-container {
+                width: 160px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== 加载屏幕 ===== -->
+    <div id="loadingScreen">
+        <div class="logo-3d-container">
+            <div class="logo-3d">
+                <img src="https://i.postimg.cc/cHBJXLjy/88C3003A-837C-468E-87AB-0F38B4B0E4D8.png" alt="Kedai Makan Logo">
+            </div>
+        </div>
+        <div class="loading-text">FOOD <span>MY</span></div>
+        <div class="progress-bar-container">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <div class="progress-percent" id="progressPercent">0%</div>
+    </div>
+
+    <!-- ===== 主应用 ===== -->
+    <div class="app" id="app">
+
+        <!-- 头部 -->
+        <div class="header">
+            <div class="resto-name">
+               FOOD MY <small>· 点餐系统</small>
+                <span class="admin-badge" id="adminBadge"><i class="fas fa-check-circle"></i> 已登录</span>
+            </div>
+            <div class="header-actions">
+                <i class="fas fa-search"></i>
+                <i class="fas fa-qrcode" id="qrIconBtn"></i>
+                <button class="login-entry-btn" id="loginEntryBtn">
+                    <i class="fas fa-store"></i> <span id="loginBtnText">商家登录</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 优惠条 -->
+        <div class="delivery-bar">
+            <span class="delivery-tag"><i class="fas fa-tag"></i> 首单减 RM5</span>
+            <span class="delivery-tag"><i class="fas fa-bicycle"></i> 免配送费</span>
+            <span class="delivery-tag"><i class="fas fa-clock"></i> 25–35 min</span>
+        </div>
+
+        <!-- 分类导航 -->
+        <div class="category-nav" id="categoryNav"></div>
+
+        <!-- 主内容 -->
+        <div class="main-content">
+            <div class="menu-list" id="menuList"></div>
+
+            <!-- 底部购物车 -->
+            <div class="cart-bar">
+                <div class="cart-left" id="cartLeftBtn">
+                    <div class="cart-icon">
+                        <i class="fas fa-shopping-bag"></i>
+                        <span id="cartCount">0</span>
+                    </div>
+                    <div class="cart-total" id="cartTotal">RM 0.00</div>
+                </div>
+                <div class="cart-actions">
+                    <button class="manage-btn" id="openManageBtn"><i class="fas fa-cog"></i> 管理</button>
+                    <button class="checkout-btn" id="checkoutBtn"><i class="fas fa-arrow-right"></i> 结算</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 购物车详情弹窗 ===== -->
+    <div class="cart-detail-overlay" id="cartDetailOverlay">
+        <div class="cart-detail-box">
+            <button class="cart-detail-close" id="cartDetailClose"><i class="fas fa-times"></i></button>
+            <h3>🛒 我的购物车</h3>
+            <div id="cartDetailList"></div>
+            <div class="cart-detail-total" id="cartDetailTotal">
+                <span>总计</span>
+                <span>RM 0.00</span>
+            </div>
+            <div class="cart-detail-actions">
+                <button class="btn-close-cart" id="cartDetailCloseBtn">关闭</button>
+                <button class="btn-clear-cart" id="cartDetailClearBtn">清空购物车</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 商品详情弹窗 ===== -->
+    <div class="detail-overlay" id="detailOverlay">
+        <div class="detail-box">
+            <button class="detail-close" id="detailCloseBtn"><i class="fas fa-times"></i></button>
+            <div class="detail-img" id="detailImg"><i class="fas fa-utensils"></i></div>
+            <div class="detail-name" id="detailName">商品名称</div>
+            <div class="detail-price" id="detailPrice">RM 0.00 <small id="detailOldPrice"></small></div>
+            <div class="detail-note" id="detailNote"><i class="fas fa-info-circle"></i> <span id="detailNoteText">商品备注</span>
+            </div>
+            <div class="addon-section" id="addonSection">
+                <div class="addon-title"><i class="fas fa-plus-circle"></i> 加料选项</div>
+                <div id="addonList"></div>
+            </div>
+            <div class="detail-remark">
+                <label><i class="fas fa-pen"></i> 备注 (可选)</label>
+                <textarea id="detailRemarkInput" placeholder="例如：少辣、不要洋葱、加饭..."></textarea>
+            </div>
+            <div class="detail-actions">
+                <button class="btn-cancel-detail" id="detailCancelBtn">取消</button>
+                <button class="btn-add-cart" id="detailAddCartBtn"><i class="fas fa-cart-plus"></i> 加入购物车</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 商家登录弹窗 -->
+    <div class="login-overlay" id="loginOverlay">
+        <div class="login-box">
+            <h2>🔐 商家登录</h2>
+            <div class="sub">商家管理菜单</div>
+            <input type="password" id="loginPassword" placeholder="请输入商家密码" />
+            <div class="login-error" id="loginError">密码错误，请重试</div>
+            <button class="btn-login" id="loginBtn"><i class="fas fa-lock"></i> 登录</button>
+            <div class="login-hint">
+               ©2026 FOOD MY 保留所有权利 <code>🇲🇾</code>
+            </div>
+        </div>
+    </div>
+
+    <!-- 管理弹窗 -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-box">
+            <h2>➕ 添加商品</h2>
+            <div class="sub">填写商品信息，图片支持URL</div>
+            <label>商品名称 *</label>
+            <input type="text" id="itemName" placeholder="例: Nasi Lemak" />
+            <label>价格 (RM) *</label>
+            <input type="number" id="itemPrice" placeholder="12.90" step="0.01" />
+            <label>原价 (RM) <span style="color:#8e8e93;font-weight:400;">(可选)</span></label>
+            <input type="number" id="itemOldPrice" placeholder="15.90" step="0.01" />
+            <label>分类</label>
+            <input type="text" id="itemCategoryInput" placeholder="输入分类名称，如: 主食" />
+            <label>图片URL</label>
+            <input type="text" id="itemImage" placeholder="https://example.com/food.jpg" />
+            <div class="image-preview" id="imagePreview"><i class="fas fa-image"></i> 预览</div>
+            <label>商品备注 <span style="color:#8e8e93;font-weight:400;">(客人可见)</span></label>
+            <textarea id="itemNote" placeholder="例: 辣度可选"></textarea>
+            <div class="addon-manage">
+                <div class="addon-manage-title"><i class="fas fa-plus-circle"></i> 加料选项</div>
+                <div class="addon-manage-row">
+                    <input type="text" id="addonNameInput" placeholder="加料名称" />
+                    <input type="number" id="addonPriceInput" placeholder="价格" step="0.01" style="max-width:80px;" />
+                    <button id="addAddonBtn">添加</button>
+                </div>
+                <div class="addon-list" id="addonManageList"></div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-cancel" id="cancelModalBtn">取消</button>
+                <button class="btn-add" id="addItemBtn"><i class="fas fa-plus"></i> 添加</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 二维码 -->
+    <div class="qr-float" id="qrFloat">
+        <div class="qr-icon"><i class="fas fa-qrcode"></i></div>
+        <div class="qr-label">扫码点餐</div>
+    </div>
+    <div class="qr-modal-overlay" id="qrModalOverlay">
+        <div class="qr-modal-box">
+            <h3>📱 扫码点餐</h3>
+            <div class="qr-sub">扫描下方二维码即可进入本店点餐</div>
+            <div id="qrcode"></div>
+            <button class="qr-close-btn" id="qrCloseBtn">关闭</button>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            // ============================================================
+            // 1. 加载动画
+            // ============================================================
+            const loadingScreen = document.getElementById('loadingScreen');
+            const progressBar = document.getElementById('progressBar');
+            const progressPercent = document.getElementById('progressPercent');
+            const app = document.getElementById('app');
+
+            let progress = 0;
+            const loadInterval = setInterval(() => {
+                progress += Math.random() * 8 + 2;
+                if (progress > 100) progress = 100;
+                progressBar.style.width = progress + '%';
+                progressPercent.textContent = Math.floor(progress) + '%';
+                if (progress >= 100) {
+                    clearInterval(loadInterval);
+                    // 隐藏加载屏幕
+                    loadingScreen.classList.add('hidden');
+                    app.classList.add('ready');
+                }
+            }, 150);
+
+            // ============================================================
+            // 2. 数据
+            // ============================================================
+            let items = [{
+                id: 1,
+                name: '椰浆饭 Nasi Lemak',
+                price: 12.90,
+                oldPrice: 15.90,
+                category: '主食',
+                image: '',
+                note: '可选辣度 (小/中/大)',
+                imgIcon: 'fa-utensils',
+                soldOut: false,
+                addons: [
+                    { name: '加炸鸡', price: 4.50 },
+                    { name: '加蛋', price: 2.00 },
+                    { name: '加参巴', price: 1.50 }
+                ]
+            }, {
+                id: 2,
+                name: '槟城炒粿条',
+                price: 11.50,
+                oldPrice: 13.50,
+                category: '主食',
+                image: '',
+                note: '含虾、腊肠',
+                imgIcon: 'fa-utensil-spoon',
+                soldOut: false,
+                addons: [
+                    { name: '加虾', price: 3.00 },
+                    { name: '加蛋', price: 2.00 }
+                ]
+            }, {
+                id: 3,
+                name: '沙爹串 (10支)',
+                price: 18.00,
+                oldPrice: 22.00,
+                category: '小吃',
+                image: '',
+                note: '附花生酱',
+                imgIcon: 'fa-drumstick-bite',
+                soldOut: false,
+                addons: [
+                    { name: '加鸡肉串', price: 3.50 },
+                    { name: '加牛肉串', price: 4.00 }
+                ]
+            }, {
+                id: 4,
+                name: 'Roti Canai + 咖喱',
+                price: 6.50,
+                oldPrice: 8.00,
+                category: '小吃',
+                image: '',
+                note: '经典印度煎饼',
+                imgIcon: 'fa-bread-slice',
+                soldOut: false,
+                addons: [
+                    { name: '加咖喱', price: 2.00 },
+                    { name: '加洋葱', price: 1.00 }
+                ]
+            }, {
+                id: 5,
+                name: 'Teh Tarik 拉茶',
+                price: 4.50,
+                oldPrice: null,
+                category: '饮品',
+                image: '',
+                note: '热饮/冷饮',
+                imgIcon: 'fa-mug-hot',
+                soldOut: false,
+                addons: [
+                    { name: '加炼奶', price: 1.00 },
+                    { name: '加珍珠', price: 2.50 }
+                ]
+            }, {
+                id: 6,
+                name: 'Kuih Seri Muka',
+                price: 5.80,
+                oldPrice: 7.00,
+                category: '小吃',
+                image: '',
+                note: '糯米 + 椰奶',
+                imgIcon: 'fa-cookie-bite',
+                soldOut: false,
+                addons: [
+                    { name: '加榴莲酱', price: 3.00 }
+                ]
+            }, ];
+            let nextId = 7;
+
+            let cart = {};
+            let currentCategory = '全部';
+            let isAdmin = false;
+            let currentViewItem = null;
+            let currentAddons = {};
+
+            // DOM
+            const menuList = document.getElementById('menuList');
+            const categoryNav = document.getElementById('categoryNav');
+            const cartCountEl = document.getElementById('cartCount');
+            const cartTotalEl = document.getElementById('cartTotal');
+            const checkoutBtn = document.getElementById('checkoutBtn');
+            const openManageBtn = document.getElementById('openManageBtn');
+            const adminBadge = document.getElementById('adminBadge');
+            const loginEntryBtn = document.getElementById('loginEntryBtn');
+
+            // 购物车详情
+            const cartDetailOverlay = document.getElementById('cartDetailOverlay');
+            const cartDetailClose = document.getElementById('cartDetailClose');
+            const cartDetailCloseBtn = document.getElementById('cartDetailCloseBtn');
+            const cartDetailClearBtn = document.getElementById('cartDetailClearBtn');
+            const cartDetailList = document.getElementById('cartDetailList');
+            const cartDetailTotal = document.getElementById('cartDetailTotal');
+            const cartLeftBtn = document.getElementById('cartLeftBtn');
+
+            // 登录
+            const loginOverlay = document.getElementById('loginOverlay');
+            const loginPassword = document.getElementById('loginPassword');
+            const loginBtn = document.getElementById('loginBtn');
+            const loginError = document.getElementById('loginError');
+
+            // 管理弹窗
+            const modalOverlay = document.getElementById('modalOverlay');
+            const cancelModalBtn = document.getElementById('cancelModalBtn');
+            const addItemBtn = document.getElementById('addItemBtn');
+            const itemName = document.getElementById('itemName');
+            const itemPrice = document.getElementById('itemPrice');
+            const itemOldPrice = document.getElementById('itemOldPrice');
+            const itemCategoryInput = document.getElementById('itemCategoryInput');
+            const itemImage = document.getElementById('itemImage');
+            const itemNote = document.getElementById('itemNote');
+            const imagePreview = document.getElementById('imagePreview');
+            const addonNameInput = document.getElementById('addonNameInput');
+            const addonPriceInput = document.getElementById('addonPriceInput');
+            const addAddonBtn = document.getElementById('addAddonBtn');
+            const addonManageList = document.getElementById('addonManageList');
+            let tempAddons = [];
+
+            // 详情弹窗
+            const detailOverlay = document.getElementById('detailOverlay');
+            const detailCloseBtn = document.getElementById('detailCloseBtn');
+            const detailCancelBtn = document.getElementById('detailCancelBtn');
+            const detailAddCartBtn = document.getElementById('detailAddCartBtn');
+            const detailImg = document.getElementById('detailImg');
+            const detailName = document.getElementById('detailName');
+            const detailPrice = document.getElementById('detailPrice');
+            const detailOldPrice = document.getElementById('detailOldPrice');
+            const detailNoteText = document.getElementById('detailNoteText');
+            const detailRemarkInput = document.getElementById('detailRemarkInput');
+            const addonList = document.getElementById('addonList');
+            const addonSection = document.getElementById('addonSection');
+
+            // 二维码
+            const qrFloat = document.getElementById('qrFloat');
+            const qrIconBtn = document.getElementById('qrIconBtn');
+            const qrModalOverlay = document.getElementById('qrModalOverlay');
+            const qrCloseBtn = document.getElementById('qrCloseBtn');
+            const qrContainer = document.getElementById('qrcode');
+
+            // ============================================================
+            // 3. 登录
+            // ============================================================
+            const ADMIN_PASSWORD = 'Liew1201';
+
+            function updateAdminUI() {
+                if (isAdmin) {
+                    openManageBtn.style.display = 'flex';
+                    adminBadge.classList.add('show');
+                    loginEntryBtn.classList.add('logged-in');
+                    loginEntryBtn.innerHTML = '<i class="fas fa-check-circle"></i> <span id="loginBtnText">已登录</span>';
+                } else {
+                    openManageBtn.style.display = 'none';
+                    adminBadge.classList.remove('show');
+                    loginEntryBtn.classList.remove('logged-in');
+                    loginEntryBtn.innerHTML = '<i class="fas fa-store"></i> <span id="loginBtnText">商家登录</span>';
+                }
+                renderItems();
+            }
+
+            loginEntryBtn.addEventListener('click', function() {
+                if (isAdmin) {
+                    if (confirm('确定要退出商家模式吗？')) {
+                        isAdmin = false;
+                        updateAdminUI();
+                        renderCategories();
+                        renderItems();
+                    }
+                } else {
+                    loginOverlay.classList.add('active');
+                    loginPassword.value = '';
+                    loginError.style.display = 'none';
+                    loginPassword.focus();
+                }
+            });
+
+            openManageBtn.addEventListener('click', function() {
+                if (!isAdmin) {
+                    loginOverlay.classList.add('active');
+                    loginPassword.value = '';
+                    loginError.style.display = 'none';
+                    loginPassword.focus();
+                } else {
+                    openModal();
+                }
+            });
+
+            loginBtn.addEventListener('click', function() {
+                const pwd = loginPassword.value.trim();
+                if (pwd === ADMIN_PASSWORD) {
+                    isAdmin = true;
+                    loginOverlay.classList.remove('active');
+                    updateAdminUI();
+                    renderCategories();
+                    renderItems();
+                    openModal();
+                } else {
+                    loginError.style.display = 'block';
+                    loginPassword.value = '';
+                    loginPassword.focus();
+                }
+            });
+
+            loginPassword.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') loginBtn.click();
+            });
+
+            loginOverlay.addEventListener('click', function(e) {
+                if (e.target === loginOverlay) loginOverlay.classList.remove('active');
+            });
+
+            // ============================================================
+            // 4. 分类
+            // ============================================================
+            function getCategories() {
+                const cats = new Set();
+                items.forEach(it => cats.add(it.category));
+                return ['全部', ...Array.from(cats)];
+            }
+
+            function renderCategories() {
+                const cats = getCategories();
+                let html = '';
+                cats.forEach(cat => {
+                    const active = cat === currentCategory ? 'active' : '';
+                    html += `<span class="category-item ${active}" data-cat="${cat}">${cat}`;
+                    if (isAdmin && cat !== '全部') {
+                        html += `<span class="del-cat" data-cat="${cat}"><i class="fas fa-times"></i></span>`;
+                    }
+                    html += `</span>`;
+                });
+                categoryNav.innerHTML = html;
+
+                document.querySelectorAll('.category-item').forEach(el => {
+                    el.addEventListener('click', function(e) {
+                        if (e.target.closest('.del-cat')) return;
+                        const cat = this.dataset.cat;
+                        currentCategory = cat;
+                        renderCategories();
+                        renderItems();
+                    });
+                    const delBtn = el.querySelector('.del-cat');
+                    if (delBtn) {
+                        delBtn.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            const cat = this.dataset.cat;
+                            if (confirm(`确定要删除分类 “${cat}” 及其所有商品吗？`)) {
+                                items = items.filter(it => it.category !== cat);
+                                if (currentCategory === cat) currentCategory = '全部';
+                                renderCategories();
+                                renderItems();
+                            }
+                        });
+                    }
+                });
+            }
+
+            // ============================================================
+            // 5. 渲染商品
+            // ============================================================
+            function renderItems() {
+                const filtered = currentCategory === '全部' ?
+                    items :
+                    items.filter(it => it.category === currentCategory);
+
+                if (filtered.length === 0) {
+                    menuList.innerHTML =
+                        `<div style="text-align:center;color:#8e8e93;padding:40px 0;">暂无商品，商家可点 “管理” 添加</div>`;
+                    return;
+                }
+
+                let html = '';
+                filtered.forEach(item => {
+                    const qty = cart[item.id]?.quantity || 0;
+                    const soldOutClass = item.soldOut ? 'sold-out' : '';
+
+                    html += `
+                        <div class="menu-item ${soldOutClass}" data-id="${item.id}">
+                            <div class="item-img" style="background-image: url('${item.image || ''}'); background-color: #f2f2f7;">
+                                ${item.image ? '' : `<i class="fas ${item.imgIcon || 'fa-utensils'}"></i>`}
+                            </div>
+                            <div class="item-details">
+                                <div class="item-name">${item.name}</div>
+                                <div class="item-desc">
+                                    ${item.note ? `<span><i class="fas fa-info-circle"></i> ${item.note}</span>` : ''}
+                                    ${item.addons && item.addons.length > 0 ? `<span><i class="fas fa-plus-circle"></i> ${item.addons.length}种加料</span>` : ''}
+                                    <span><i class="fas fa-star"></i> 4.8</span>
+                                </div>
+                                <div class="item-price">
+                                    RM ${item.price.toFixed(2)}
+                                    ${item.oldPrice ? `<small>RM ${item.oldPrice.toFixed(2)}</small>` : ''}
+                                </div>
+                            </div>
+                            <div class="item-actions">
+                                <div class="qty-control" data-id="${item.id}">
+                                    <button class="qty-btn dec">−</button>
+                                    <span class="qty-number">${qty}</span>
+                                    <button class="qty-btn inc">+</button>
+                                </div>
+                                ${isAdmin ? `
+                                <div class="admin-item-actions show">
+                                    <button class="btn-soldout" data-id="${item.id}" title="${item.soldOut ? '标记为在售' : '标记为售罄'}">
+                                        <i class="fas ${item.soldOut ? 'fa-undo' : 'fa-ban'}"></i>
+                                    </button>
+                                    <button class="btn-delete" data-id="${item.id}" title="删除商品">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    `;
+                });
+                menuList.innerHTML = html;
+                updateCartUI();
+
+                // 绑定点击打开详情
+                document.querySelectorAll('.menu-item:not(.sold-out)').forEach(el => {
+                    el.addEventListener('click', function(e) {
+                        if (e.target.closest('.qty-btn')) return;
+                        if (e.target.closest('.admin-item-actions')) return;
+                        const id = parseInt(this.dataset.id);
+                        const item = items.find(it => it.id === id);
+                        if (item && !item.soldOut) openDetail(item);
+                    });
+                });
+
+                // 商家操作按钮
+                document.querySelectorAll('.btn-soldout').forEach(btn => {
+                    btn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        const id = parseInt(this.dataset.id);
+                        const item = items.find(it => it.id === id);
+                        if (item) {
+                            item.soldOut = !item.soldOut;
+                            renderItems();
+                        }
+                    });
+                });
+                document.querySelectorAll('.btn-delete').forEach(btn => {
+                    btn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        const id = parseInt(this.dataset.id);
+                        if (confirm('确定要删除此商品吗？')) {
+                            items = items.filter(it => it.id !== id);
+                            delete cart[id];
+                            renderCategories();
+                            renderItems();
+                        }
+                    });
+                });
+            }
+
+            // ============================================================
+            // 6. 购物车
+            // ============================================================
+            function updateCartUI() {
+                let totalItems = 0,
+                    totalPrice = 0;
+                for (const id in cart) {
+                    const data = cart[id];
+                    if (data.quantity > 0) {
+                        totalItems += data.quantity;
+                        const item = items.find(it => it.id == id);
+                        if (item) {
+                            totalPrice += data.quantity * item.price;
+                            if (data.addons) {
+                                for (const a of data.addons) {
+                                    totalPrice += a.quantity * a.price;
+                                }
+                            }
+                        }
+                    }
+                }
+                cartCountEl.textContent = totalItems;
+                cartTotalEl.textContent = `RM ${totalPrice.toFixed(2)}`;
+                cartTotalEl.style.color = totalItems === 0 ? '#8e8e93' : '#1c1c1e';
+            }
+
+            function changeQuantity(id, delta) {
+                if (!cart[id]) cart[id] = { quantity: 0, note: '', addons: [] };
+                const newQty = Math.max(0, cart[id].quantity + delta);
+                cart[id].quantity = newQty;
+                if (newQty === 0 && !cart[id].note && (!cart[id].addons || cart[id].addons.length === 0)) {
+                    delete cart[id];
+                }
+                renderItems();
+            }
+
+            // ============================================================
+            // 7. 购物车详情弹窗
+            // ============================================================
+            function openCartDetail() {
+                const entries = Object.entries(cart).filter(([id, data]) => data.quantity > 0);
+                if (entries.length === 0) {
+                    cartDetailList.innerHTML = `<div class="cart-empty-msg">🛒 购物车是空的</div>`;
+                    cartDetailTotal.innerHTML = `<span>总计</span><span>RM 0.00</span>`;
+                } else {
+                    let html = '';
+                    let total = 0;
+                    entries.forEach(([id, data]) => {
+                        const item = items.find(it => it.id == id);
+                        if (item) {
+                            let itemTotal = data.quantity * item.price;
+                            let addonText = '';
+                            if (data.addons && data.addons.length > 0) {
+                                addonText = data.addons.map(a =>
+                                    ` + ${a.name} x${a.quantity}`
+                                ).join('');
+                                data.addons.forEach(a => { itemTotal += a.quantity * a.price; });
+                            }
+                            html += `
+                                <div class="cart-detail-item">
+                                    <div class="cd-info">
+                                        <div class="cd-name">${item.name} x${data.quantity}</div>
+                                        ${addonText ? `<div class="cd-addons">${addonText}</div>` : ''}
+                                        ${data.note ? `<div class="cd-addons">📝 ${data.note}</div>` : ''}
+                                    </div>
+                                    <div class="cd-price">RM ${itemTotal.toFixed(2)}</div>
+                                    <button class="cd-remove" data-id="${id}"><i class="fas fa-times-circle"></i></button>
+                                </div>
+                            `;
+                            total += itemTotal;
+                        }
+                    });
+                    cartDetailList.innerHTML = html;
+                    cartDetailTotal.innerHTML = `<span>总计</span><span>RM ${total.toFixed(2)}</span>`;
+
+                    cartDetailList.querySelectorAll('.cd-remove').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            const id = this.dataset.id;
+                            delete cart[id];
+                            renderItems();
+                            openCartDetail();
+                            if (Object.keys(cart).filter(k => cart[k].quantity > 0).length === 0) {
+                                openCartDetail();
+                            }
+                        });
+                    });
+                }
+                cartDetailOverlay.classList.add('active');
+            }
+
+            cartLeftBtn.addEventListener('click', openCartDetail);
+            cartDetailClose.addEventListener('click', () => cartDetailOverlay.classList.remove('active'));
+            cartDetailCloseBtn.addEventListener('click', () => cartDetailOverlay.classList.remove('active'));
+            cartDetailOverlay.addEventListener('click', function(e) {
+                if (e.target === cartDetailOverlay) cartDetailOverlay.classList.remove('active');
+            });
+
+            cartDetailClearBtn.addEventListener('click', function() {
+                if (confirm('确定要清空购物车吗？')) {
+                    cart = {};
+                    renderItems();
+                    cartDetailOverlay.classList.remove('active');
+                }
+            });
+
+            // ============================================================
+            // 8. 商品详情弹窗
+            // ============================================================
+            function openDetail(item) {
+                if (item.soldOut) return;
+                currentViewItem = item;
+                currentAddons = {};
+                if (item.addons) {
+                    item.addons.forEach(a => { currentAddons[a.name] = 0; });
+                }
+
+                detailImg.style.backgroundImage = item.image ? `url('${item.image}')` : 'none';
+                detailImg.style.backgroundColor = item.image ? '#f2f2f7' : '#f2f2f7';
+                detailImg.innerHTML = item.image ? '' : `<i class="fas ${item.imgIcon || 'fa-utensils'}"></i>`;
+                detailName.textContent = item.name;
+                detailPrice.innerHTML = `RM ${item.price.toFixed(2)}`;
+                detailOldPrice.textContent = item.oldPrice ? `RM ${item.oldPrice.toFixed(2)}` : '';
+                detailNoteText.textContent = item.note || '无备注信息';
+                detailRemarkInput.value = '';
+
+                if (item.addons && item.addons.length > 0) {
+                    addonSection.style.display = 'block';
+                    let html = '';
+                    item.addons.forEach((a) => {
+                        html += `
+                            <div class="addon-item">
+                                <div class="addon-info">
+                                    <div class="addon           -name">${a.name}</div>
+                                    <div class="addon-price">+RM ${a.price.toFixed(2)}</div>
+                                </div>
+                                <div class="addon-qty">
+                                    <button class="addon-dec" data-name="${a.name}">−</button>
+                                    <span class="addon-number" data-name="${a.name}">0</span>
+                                    <button class="addon-inc" data-name="${a.name}">+</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    addonList.innerHTML = html;
+
+                    addonList.querySelectorAll('.addon-dec').forEach(btn => {
+                        btn.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            const name = this.dataset.name;
+                            if (currentAddons[name] > 0) {
+                                currentAddons[name]--;
+                                updateAddonUI(name);
+                            }
+
+ }
+                        });
+                    });
+                               addonList.querySelectorAll('.addon-inc function').forEach(btn => {
+                        btn.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            const name = this.dataset.name;
+                            currentAddons[name] = (currentAddons[name] || 0) + 1;
+                            updateAddonUI(name);
+                        });
+                    });
+                } else {
+                    addonSection.style.display = 'none';
+                }
+
+                detailOverlay.classList.add('active');
+ updateAddonUI(name) {
+                const span = addonList.querySelector(`.addon-number[data-name="${name}"]`);
+                if (span) span.textContent = currentAddons[name] || 0;
+            }
+
+            function closeDetail() {
+                detailOverlay.classList.remove('active');
+                currentViewItem = null;
+                currentAddons = {};
+            }
+
+            detailCloseBtn.addEventListener('click', closeDetail);
+            detailCancelBtn.addEventListener('click', closeDetail);
+            detailOverlay.addEventListener('click', function(e) {
+                if (e.target === detailOverlay) closeDetail();
+            });
+
+            detailAddCartBtn.addEventListener('click', function() {
+                if (!currentViewItem) return;
+                const id = currentViewItem.id;
+                const note = detailRemarkInput.value.trim();
+
+                const selectedAddons = [];
+                for (const [name, qty] of Object.entries(currentAddons)) {
+                    if (qty > 0) {
+                        const addonInfo = currentViewItem.addons.find(a => a.name === name);
+                        if (addonInfo) {
+                            selectedAddons.push({ name, price: addonInfo.price, quantity: qty });
+                        }
+                    }
+                }
+
+                if (!cart[id]) cart[id] = { quantity: 0, note: '', addons: [] };
+                cart[id].quantity += 1;
+                cart[id].note = note || cart[id].note || '';
+
+                if (selectedAddons.length > 0) {
+                    if (!cart[id].addons) cart[id].addons = [];
+                    selectedAddons.forEach(sa => {
+                        const existing = cart[id].addons.find(a => a.name === sa.name);
+                        if (existing) {
+                            existing.quantity += sa.quantity;
+                        } else {
+                            cart[id].addons.push({ ...sa });
+                        }
+                    });
+                }
+
+                closeDetail();
+                renderItems();
+                const btn = detailAddCartBtn;
+                btn.textContent = '✅ 已加入';
+                btn.style.background = '#34c759';
+                setTimeout(() => {
+                    btn.innerHTML = '<i class="fas fa-cart-plus"></i> 加入购物车';
+                    btn.style.background = '';
+                }, 800);
+            });
+
+            // ============================================================
+            // 9. 快捷加减
+            // ============================================================
+            document.addEventListener('click', function(e) {
+                const btn = e.target.closest('.qty-btn');
+                if (btn) {
+                    const control = btn.closest('.qty-control');
+                    if (!control) return;
+                    const menuItem = control.closest('.menu-item');
+                    if (!menuItem) return;
+                    const id = parseInt(menuItem.dataset.id);
+                    if (isNaN(id)) return;
+                    e.stopPropagation();
+                    const item = items.find(it => it.id === id);
+                    if (item && item.soldOut) return;
+                    if (btn.classList.contains('inc')) changeQuantity(id, 1);
+                    else if (btn.classList.contains('dec')) changeQuantity(id, -1);
+                }
+            });
+
+            // ============================================================
+            // 10. 结算
+            // ============================================================
+            checkoutBtn.addEventListener('click', function() {
+                const entries = Object.entries(cart).filter(([id, data]) => data.quantity > 0);
+                if (entries.length === 0) {
+                    alert('🛒 购物车是空的，添加美食吧！');
+                    return;
+                }
+                let msg = '📋 订单明细:\n';
+                let total = 0;
+                entries.forEach(([id, data]) => {
+                    const item = items.find(it => it.id == id);
+                    if (item) {
+                        let itemTotal = data.quantity * item.price;
+                        msg += `  ${item.name} x${data.quantity} = RM ${(data.quantity * item.price).toFixed(2)}`;
+                        if (data.addons && data.addons.length > 0) {
+                            const addonText = data.addons.map(a =>
+                                `    ${a.name} x${a.quantity} (+RM ${(a.quantity * a.price).toFixed(2)})`
+                            ).join('\n');
+                            msg += `\n${addonText}`;
+                            data.addons.forEach(a => { itemTotal += a.quantity * a.price; });
+                        }
+                        if (data.note) msg += `\n    📝 备注: ${data.note}`;
+                        msg += `\n  小计: RM ${itemTotal.toFixed(2)}\n`;
+                        total += itemTotal;
+                    }
+                });
+                msg += `\n💰 总计: RM ${total.toFixed(2)}`;
+                msg += '\n\n✅ 订单已提交！Terima kasih!';
+                alert(msg);
+                cart = {};
+                renderItems();
+            });
+
+            // ============================================================
+            // 11. 管理弹窗
+            // ============================================================
+            function openModal() {
+                if (!isAdmin) {
+                    loginOverlay.classList.add('active');
+                    loginPassword.value = '';
+                    loginError.style.display = 'none';
+                    loginPassword.focus();
+                    return;
+                }
+                modalOverlay.classList.add('active');
+                itemName.value = '';
+                itemPrice.value = '';
+                itemOldPrice.value = '';
+                itemCategoryInput.value = '';
+                itemImage.value = '';
+                itemNote.value = '';
+                imagePreview.innerHTML = '<i class="fas fa-image"></i> 预览';
+                tempAddons = [];
+                renderAddonManage();
+            }
+
+            function closeModal() { modalOverlay.classList.remove('active'); }
+            cancelModalBtn.addEventListener('click', closeModal);
+            modalOverlay.addEventListener('click', function(e) {
+                if (e.target === modalOverlay) closeModal();
+            });
+
+            itemImage.addEventListener('input', function() {
+                const url = this.value.trim();
+                if (url) {
+                    imagePreview.innerHTML =
+                        `<img src="${url}" alt="预览" onerror="this.parentElement.innerHTML='<i class=\\'fas fa-image\\'></i> 图片加载失败'">`;
+                } else {
+                    imagePreview.innerHTML = '<i class="fas fa-image"></i> 预览';
+                }
+            });
+
+            function renderAddonManage() {
+                let html = '';
+                tempAddons.forEach((a, index) => {
+                    html += `
+                        <span class="addon-tag">
+                            ${a.name} (+RM ${a.price.toFixed(2)})
+                            <span class="del-addon" data-index="${index}"><i class="fas fa-times"></i></span>
+                        </span>
+                    `;
+                });
+                addonManageList.innerHTML = html;
+                addonManageList.querySelectorAll('.del-addon').forEach(el => {
+                    el.addEventListener('click', function() {
+                        const idx = parseInt(this.dataset.index);
+                        tempAddons.splice(idx, 1);
+                        renderAddonManage();
+                    });
+                });
+            }
+
+            addAddonBtn.addEventListener('click', function() {
+                const name = addonNameInput.value.trim();
+                const price = parseFloat(addonPriceInput.value);
+                if (!name) { alert('请输入加料名称'); return; }
+                if (isNaN(price) || price <= 0) { alert('请输入有效价格'); return; }
+                tempAddons.push({ name, price });
+                addonNameInput.value = '';
+                addonPriceInput.value = '';
+                renderAddonManage();
+            });
+
+            addItemBtn.addEventListener('click', function() {
+                const name = itemName.value.trim();
+                const price = parseFloat(itemPrice.value);
+                const oldPrice = itemOldPrice.value.trim() ? parseFloat(itemOldPrice.value) : null;
+                const category = itemCategoryInput.value.trim() || '未分类';
+                const image = itemImage.value.trim();
+                const note = itemNote.value.trim();
+
+                if (!name) { alert('请输入商品名称'); return; }
+                if (isNaN(price) || price <= 0) { alert('请输入有效价格'); return; }
+
+                const newItem = {
+                    id: nextId++,
+                    name,
+                    price,
+                    oldPrice,
+                    category,
+                    image,
+                    note: note || '',
+                    imgIcon: 'fa-utensils',
+                    soldOut: false,
+                    addons: [...tempAddons]
+                };
+                items.push(newItem);
+                closeModal();
+                currentCategory = '全部';
+                renderCategories();
+                renderItems();
+                alert(`✅ 已添加: ${name} (含 ${tempAddons.length} 种加料)`);
+            });
+
+            // ============================================================
+            // 12. 二维码 - 修复：增加错误处理
+            // ============================================================
+            function generateQR() {
+                const currentUrl = window.location.href;
+                qrContainer.innerHTML = '';
+                
+                try {
+                    // 检查 QRCode 是否可用
+                    if (typeof QRCode !== 'undefined') {
+                        new QRCode(qrContainer, {
+                            text: currentUrl,
+                            width: 200,
+                            height: 200,
+                            colorDark: '#1c1c1e',
+                            colorLight: '#ffffff',
+                            correctLevel: QRCode.CorrectLevel.H
+                        });
+                    } else {
+                        // 备用方案：显示链接
+                        qrContainer.innerHTML = `
+                            <div style="text-align:center;padding:20px;">
+                                <i class="fas fa-qrcode" style="font-size:60px;color:#ff7a00;"></i>
+                                <p style="margin-top:10px;color:#1c1c1e;font-weight:600;">扫码点餐</p>
+                                <p style="font-size:12px;color:#8e8e93;word-break:break-all;max-width:280px;margin-top:6px;">
+                                    ${currentUrl}
+                                </p>
+                            </div>
+                        `;
+                    }
+                } catch (err) {
+                    console.warn('二维码生成失败:', err);
+                    qrContainer.innerHTML = `
+                        <div style="text-align:center;padding:20px;">
+                            <i class="fas fa-qrcode" style="font-size:60px;color:#ff7a00;"></i>
+                            <p style="margin-top:10px;color:#1c1c1e;font-weight:600;">扫码点餐</p>
+                            <p style="font-size:12px;color:#8e8e93;word-break:break-all;max-width:280px;margin-top:6px;">
+                                ${currentUrl}
+                            </p>
+                        </div>
+                    `;
+                }
+            }
+
+            function showQRModal() {
+                generateQR();
+                qrModalOverlay.classList.add('active');
+            }
+            
+            qrFloat.addEventListener('click', showQRModal);
+            qrIconBtn.addEventListener('click', showQRModal);
+            qrCloseBtn.addEventListener('click', () => qrModalOverlay.classList.remove('active'));
+            qrModalOverlay.addEventListener('click', function(e) {
+                if (e.target === qrModalOverlay) qrModalOverlay.classList.remove('active');
+            });
+
+            // ============================================================
+            // 13. 键盘快捷键
+            // ============================================================
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    if (qrModalOverlay.classList.contains('active')) qrModalOverlay.classList.remove('active');
+                    if (modalOverlay.classList.contains('active')) closeModal();
+                    if (loginOverlay.classList.contains('active')) loginOverlay.classList.remove('active');
+                    if (detailOverlay.classList.contains('active')) closeDetail();
+                    if (cartDetailOverlay.classList.contains('active')) cartDetailOverlay.classList.remove('active');
+                }
+            });
+
+            // ============================================================
+            // 14. 初始化
+            // ============================================================
+            // 等待加载完成后初始化
+            setTimeout(() => {
+                updateAdminUI();
+                renderCategories();
+                renderItems();
+                generateQR();
+            }, 1000);
+        })();
+    </script>
+</body>
+</html>
