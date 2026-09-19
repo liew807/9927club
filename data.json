@@ -1,0 +1,73 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "username": "admin",
+      "password": "admin123",
+      "isAdmin": true,
+      "createdAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": 2,
+      "username": "liew",
+      "password": "liew123",
+      "isAdmin": true,
+      "createdAt": "2026-01-01T00:00:00.000Z"
+    }
+  ],
+  "products": [
+    {
+      "id": 1700000000001,
+      "name": "示例商品 - 涂装服务",
+      "price": 29.9,
+      "description": "这是一个示例商品，请在管理后台修改或删除。",
+      "image": "https://i.ibb.co/mC5YR8G9/IMG-5127.png",
+      "category": "热门",
+      "createdAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": 1700000000002,
+      "name": "示例商品 - 限时特惠",
+      "price": 49.9,
+      "description": "限时优惠商品示例，可在管理后台修改。",
+      "image": "https://i.ibb.co/vCYgSkkK/IMG-5128.png",
+      "category": "限时,热门",
+      "createdAt": "2026-01-01T00:00:00.000Z"
+    }
+  ],
+  "orders": [],
+  "services": [
+    {
+      "id": 1,
+      "type": "whatsapp",
+      "name": "官方客服",
+      "link": "https://wa.me/60123456789",
+      "enabled": true,
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": 2,
+      "type": "wechat",
+      "name": "微信客服",
+      "link": "https://weixin.qq.com/",
+      "enabled": true,
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    }
+  ],
+  "carousels": [],
+  "gridButtons": {
+    "left": { "img": "", "link": "", "label": "热门推荐" },
+    "right": { "img": "", "link": "", "label": "限时优惠" }
+  },
+  "settings": {
+    "storeName": "RealmStore商城",
+    "kuaishouLink": "",
+    "contactInfo": "",
+    "welcomeMessage": "欢迎选购！",
+    "enableService": true,
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  "lastUpdated": "2026-01-01T00:00:00.000Z"
+}
