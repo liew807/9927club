@@ -1,0 +1,21 @@
+{
+  "name": "MK DJ",
+  "short_name": "MK DJ",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0f0f14",
+  "theme_color": "#7c3aed",
+  "icons": [
+    {
+      "src": "https://i.ibb.co/6RhPBz9y/033-C004-A-CB9-E-4-EFA-90-E2-BD337-CF0-EFC2.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg"
+    },
+    {
+      "src": "https://i.ibb.co/6RhPBz9y/033-C004-A-CB9-E-4-EFA-90-E2-BD337-CF0-EFC2.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}
